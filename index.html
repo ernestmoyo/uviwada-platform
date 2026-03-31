@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UVIWADA - Umoja wa Vituo vya Watoto wa Dar es Salaam</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+    <div class="container top-bar-inner">
+        <span class="top-bar-text" data-sw="Kuimarisha huduma za malezi Dar es Salaam" data-en="Strengthening childcare services in Dar es Salaam"></span>
+        <button class="lang-toggle" onclick="toggleLang()" aria-label="Switch language">
+            <span class="lang-flag">EN</span> / <span class="lang-flag active">SW</span>
+        </button>
+    </div>
+</div>
+
+<!-- Navigation -->
+<nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+        <a href="#" class="logo">
+            <div class="logo-mark">U</div>
+            <div class="logo-text">
+                <strong>UVIWADA</strong>
+                <small data-sw="Umoja wa Vituo vya Watoto" data-en="Daycare Centres Association"></small>
+            </div>
+        </a>
+        <button class="menu-btn" onclick="toggleMenu()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#home" data-sw="Nyumbani" data-en="Home">Nyumbani</a></li>
+            <li><a href="#about" data-sw="Kuhusu" data-en="About">Kuhusu</a></li>
+            <li><a href="#services" data-sw="Huduma" data-en="Services">Huduma</a></li>
+            <li><a href="#dashboard" data-sw="Takwimu" data-en="Dashboard">Takwimu</a></li>
+            <li><a href="#map" data-sw="Ramani" data-en="Map">Ramani</a></li>
+            <li><a href="#contact" data-sw="Wasiliana" data-en="Contact">Wasiliana</a></li>
+            <li><a href="#portal" class="btn-nav" data-sw="Ingia Portalini" data-en="Member Login">Ingia Portalini</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="home">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+        <div class="hero-badge" data-sw="Kwa ushirikiano na Children in Crossfire" data-en="In partnership with Children in Crossfire"></div>
+        <h1 data-sw="Kuimarisha Vituo vya Malezi ya Watoto Dar es Salaam" data-en="Strengthening Daycare Centres Across Dar es Salaam"></h1>
+        <p class="hero-sub" data-sw="Jukwaa la kidijitali la UVIWADA linaunganisha, linasaidia na kuinua ubora wa vituo vya malezi katika maeneo ya watu wengi na mapato ya chini." data-en="UVIWADA's digital platform connects, supports and elevates the quality of daycare centres in high-density, low-income areas."></p>
+        <div class="hero-actions">
+            <a href="#services" class="btn btn-primary" data-sw="Huduma Zetu" data-en="Our Services"></a>
+            <a href="#portal" class="btn btn-outline" data-sw="Jiunge Sasa" data-en="Join Now"></a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-num" data-count="150">0</span>+
+                <span class="stat-label" data-sw="Vituo vya Wanachama" data-en="Member Centres"></span>
+            </div>
+            <div class="stat">
+                <span class="stat-num" data-count="5">0</span>
+                <span class="stat-label" data-sw="Wilaya za Dar" data-en="Dar Districts"></span>
+            </div>
+            <div class="stat">
+                <span class="stat-num" data-count="3500">0</span>+
+                <span class="stat-label" data-sw="Watoto Wanaofaidika" data-en="Children Reached"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About -->
+<section class="section" id="about">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag" data-sw="Kuhusu Sisi" data-en="About Us"></span>
+            <h2 data-sw="UVIWADA ni Nini?" data-en="What is UVIWADA?"></h2>
+        </div>
+        <div class="about-grid">
+            <div class="about-card">
+                <div class="about-icon">&#x1F3E0;</div>
+                <h3 data-sw="Chama cha Wamiliki" data-en="Owners' Association"></h3>
+                <p data-sw="UVIWADA ni chama cha wamiliki wa vituo vya malezi vya watoto vya binafsi Dar es Salaam, kimeanzishwa kuimarisha uratibu, uwakilishi na mawasiliano ndani ya sekta ya malezi." data-en="UVIWADA is a membership-based association of private daycare centre owners in Dar es Salaam, strengthening coordination, representation and communication within the childcare sector."></p>
+            </div>
+            <div class="about-card">
+                <div class="about-icon">&#x1F91D;</div>
+                <h3 data-sw="Ushirikiano wa Kimkakati" data-en="Strategic Partnership"></h3>
+                <p data-sw="Tunafanya kazi kwa ushirikiano na Children in Crossfire (CiC) kupitia mpango wa Dar Urban ECCE, unaotumia mbinu ya maendeleo ya mfumo wa soko kuboresha ubora na uwezo wa kibiashara wa vituo." data-en="We work in strategic partnership with Children in Crossfire (CiC) through the Dar Urban ECCE programme, using a market systems approach to improve quality and commercial viability."></p>
+            </div>
+            <div class="about-card">
+                <div class="about-icon">&#x1F4CA;</div>
+                <h3 data-sw="Mfumo wa NMECDP" data-en="NMECDP Aligned"></h3>
+                <p data-sw="Viashiria vyetu vya utendaji vinafuata Mpango wa Kitaifa wa Maendeleo ya Awali ya Mtoto wa Tanzania, kuhakikisha data yetu inachangia katika sera na ushahidi wa kitaifa." data-en="Our performance indicators are aligned to Tanzania's National Multisectoral Early Childhood Development Programme, ensuring our data contributes to national policy and evidence."></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services / Member Portal Preview -->
+<section class="section section-alt" id="services">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag" data-sw="Huduma za Wanachama" data-en="Member Services"></span>
+            <h2 data-sw="Jukwaa la Huduma za Kidijitali" data-en="Digital Service Platform"></h2>
+            <p class="section-desc" data-sw="Moduli saba za huduma zinazotolewa kupitia portal ya wanachama" data-en="Seven integrated service modules delivered through the member portal"></p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">&#x1F4CB;</div>
+                <h4 data-sw="Usimamizi wa Uanachama" data-en="Membership Management"></h4>
+                <p data-sw="Usajili mtandaoni, wasifu wa kituo, usimamizi wa mzunguko wa uanachama, vikumbusho vya kiotomatiki" data-en="Online registration, centre profiles, membership lifecycle management, automated renewal reminders"></p>
+            </div>
+            <div class="service-card featured">
+                <div class="service-badge" data-sw="Muhimu" data-en="Key Feature"></div>
+                <div class="service-icon">&#x2705;</div>
+                <h4 data-sw="Ufuatiliaji wa Ubora" data-en="Quality Improvement Tracking"></h4>
+                <p data-sw="Tathmini za ubora zilizounganishwa na viwango vya serikali, ukadiriaji wa taa za trafiki, ufuatiliaji wa mwenendo" data-en="Quality assessments aligned to government ECCE standards, traffic-light ratings, longitudinal trend tracking"></p>
+                <!-- Traffic Light Demo -->
+                <div class="quality-demo">
+                    <div class="quality-item">
+                        <span class="traffic-light green"></span>
+                        <span data-sw="Miundombinu" data-en="Infrastructure"></span>
+                    </div>
+                    <div class="quality-item">
+                        <span class="traffic-light amber"></span>
+                        <span data-sw="Wafanyakazi" data-en="Staffing"></span>
+                    </div>
+                    <div class="quality-item">
+                        <span class="traffic-light green"></span>
+                        <span data-sw="Mtaala" data-en="Curriculum"></span>
+                    </div>
+                    <div class="quality-item">
+                        <span class="traffic-light red"></span>
+                        <span data-sw="Usafi" data-en="Hygiene"></span>
+                    </div>
+                    <div class="quality-item">
+                        <span class="traffic-light green"></span>
+                        <span data-sw="Ulinzi wa Mtoto" data-en="Safeguarding"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F393;</div>
+                <h4 data-sw="Mafunzo na Uwezo" data-en="Training & Capacity"></h4>
+                <p data-sw="Kalenda ya mafunzo, usajili mtandaoni, utoaji wa vyeti, historia ya mafunzo ya kituo" data-en="Training calendar, online registration, certificate generation, centre-level training history"></p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F4DC;</div>
+                <h4 data-sw="Uzingatiaji wa Kanuni" data-en="Regulatory Compliance"></h4>
+                <p data-sw="Ufuatiliaji wa leseni, vikumbusho vya muda wa kuisha, hazina ya nyaraka, taarifa za udhibiti" data-en="License tracking, expiry reminders, document repository, regulatory update notifications"></p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F4B0;</div>
+                <h4 data-sw="Msaada wa Biashara" data-en="Business Viability"></h4>
+                <p data-sw="Maktaba ya rasilimali za biashara, bodi ya fursa za kifedha, jukwaa la kujifunza kwa wenzao" data-en="Business resource library, financing opportunities board, peer learning forum"></p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F6E1;</div>
+                <h4 data-sw="Ustawi wa Mtoto" data-en="Child Welfare"></h4>
+                <p data-sw="Ripoti za usajili wa watoto, orodha za ustawi, sera za ulinzi, ripoti za matukio ya siri" data-en="Child enrolment reporting, wellbeing checklists, protection policies, confidential incident reporting"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard Preview -->
+<section class="section" id="dashboard">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag" data-sw="Dashibodi ya M&E" data-en="M&E Dashboard"></span>
+            <h2 data-sw="Takwimu na Uchambuzi" data-en="Data & Analytics"></h2>
+            <p class="section-desc" data-sw="Dashibodi za wakati halisi zilizounganishwa na viashiria vya NMECDP" data-en="Real-time dashboards aligned to NMECDP indicators"></p>
+        </div>
+        <div class="dashboard-preview">
+            <div class="dash-tabs">
+                <button class="dash-tab active" onclick="switchDashTab(this, 'uviwada')" data-sw="UVIWADA" data-en="UVIWADA">UVIWADA</button>
+                <button class="dash-tab" onclick="switchDashTab(this, 'cic')" data-sw="CiC Programme" data-en="CiC Programme">CiC Programme</button>
+            </div>
+            <div class="dash-content" id="dash-uviwada">
+                <div class="dash-cards">
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Jumla ya Wanachama" data-en="Total Members"></span>
+                        <span class="dash-card-value">147</span>
+                        <span class="dash-card-trend up">+12%</span>
+                    </div>
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Vituo Hai" data-en="Active Centres"></span>
+                        <span class="dash-card-value">132</span>
+                        <span class="dash-card-trend up">+8%</span>
+                    </div>
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Kiwango cha Ubora wa Wastani" data-en="Avg Quality Score"></span>
+                        <span class="dash-card-value">68%</span>
+                        <span class="dash-card-trend up">+5%</span>
+                    </div>
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Mafunzo Yaliyokamilika" data-en="Trainings Completed"></span>
+                        <span class="dash-card-value">24</span>
+                        <span class="dash-card-trend neutral">Q1 2026</span>
+                    </div>
+                </div>
+                <div class="dash-charts">
+                    <div class="chart-box">
+                        <h4 data-sw="Usambazaji wa Ubora wa Wanachama" data-en="Member Quality Distribution"></h4>
+                        <canvas id="qualityChart" height="200"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h4 data-sw="Ukuaji wa Uanachama" data-en="Membership Growth"></h4>
+                        <canvas id="growthChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-content hidden" id="dash-cic">
+                <div class="dash-cards">
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Viashiria vya NMECDP" data-en="NMECDP Indicators"></span>
+                        <span class="dash-card-value">12/15</span>
+                        <span class="dash-card-trend up" data-sw="Zinafuatiliwa" data-en="Tracked"></span>
+                    </div>
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Vituo Vilivyoboreshwa" data-en="Centres Improved"></span>
+                        <span class="dash-card-value">67</span>
+                        <span class="dash-card-trend up">+23%</span>
+                    </div>
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Watoto Walioathiriwa" data-en="Children Impacted"></span>
+                        <span class="dash-card-value">2,840</span>
+                        <span class="dash-card-trend up">+15%</span>
+                    </div>
+                    <div class="dash-card">
+                        <span class="dash-card-label" data-sw="Ripoti za Wafadhili" data-en="Donor Reports"></span>
+                        <span class="dash-card-value">4</span>
+                        <span class="dash-card-trend neutral">Q1 2026</span>
+                    </div>
+                </div>
+                <div class="nmecdp-indicators">
+                    <h4 data-sw="Hali ya Viashiria vya NMECDP" data-en="NMECDP Indicator Status"></h4>
+                    <div class="indicator-list">
+                        <div class="indicator"><span class="ind-status green"></span><span data-sw="Ufikiaji wa watoto chini ya 6" data-en="Access for children under 6"></span><span class="ind-val">78%</span></div>
+                        <div class="indicator"><span class="ind-status green"></span><span data-sw="Watoa huduma waliofunzwa" data-en="Trained caregivers"></span><span class="ind-val">82%</span></div>
+                        <div class="indicator"><span class="ind-status amber"></span><span data-sw="Vituo vyenye leseni" data-en="Licensed centres"></span><span class="ind-val">54%</span></div>
+                        <div class="indicator"><span class="ind-status green"></span><span data-sw="Uwiano wa mtoto-mlezi" data-en="Child-caregiver ratio"></span><span class="ind-val">1:12</span></div>
+                        <div class="indicator"><span class="ind-status red"></span><span data-sw="Miundombinu ya WASH" data-en="WASH infrastructure"></span><span class="ind-val">38%</span></div>
+                        <div class="indicator"><span class="ind-status amber"></span><span data-sw="Lishe na afya" data-en="Nutrition & health"></span><span class="ind-val">61%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- GIS Map -->
+<section class="section section-alt" id="map">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag" data-sw="Ramani ya GIS" data-en="GIS Map"></span>
+            <h2 data-sw="Vituo vya Wanachama - Dar es Salaam" data-en="Member Centres - Dar es Salaam"></h2>
+            <p class="section-desc" data-sw="Ramani ya mwingiliano inayoonyesha usambazaji wa vituo katika kata za Dar es Salaam" data-en="Interactive map showing centre distribution across Dar es Salaam wards"></p>
+        </div>
+        <div class="map-container">
+            <div class="map-legend">
+                <div class="legend-item"><span class="legend-dot green"></span><span data-sw="Ubora Mzuri" data-en="Good Quality"></span></div>
+                <div class="legend-item"><span class="legend-dot amber"></span><span data-sw="Unahitaji Kuboresha" data-en="Needs Improvement"></span></div>
+                <div class="legend-item"><span class="legend-dot red"></span><span data-sw="Chini ya Kiwango" data-en="Below Standard"></span></div>
+            </div>
+            <div id="mapView" style="height: 450px; border-radius: 12px;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Member Portal Preview -->
+<section class="section" id="portal">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag" data-sw="Portal ya Wanachama" data-en="Member Portal"></span>
+            <h2 data-sw="Jiunge na UVIWADA Leo" data-en="Join UVIWADA Today"></h2>
+        </div>
+        <div class="portal-preview">
+            <div class="portal-form-card">
+                <h3 data-sw="Fomu ya Usajili wa Kituo" data-en="Centre Registration Form"></h3>
+                <p class="form-note" data-sw="Jaza taarifa zako kuanza mchakato wa uanachama" data-en="Fill in your details to begin the membership process"></p>
+                <form class="demo-form" onsubmit="handleRegistration(event)">
+                    <div class="form-group">
+                        <label data-sw="Jina la Kituo" data-en="Centre Name"></label>
+                        <input type="text" placeholder="e.g. Mama Amina Daycare Centre" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-sw="Kata" data-en="Ward"></label>
+                            <select>
+                                <option value="">--</option>
+                                <option>Vingunguti</option>
+                                <option>Manzese</option>
+                                <option>Temeke</option>
+                                <option>Mbagala</option>
+                                <option>Kariakoo</option>
+                                <option>Kigamboni</option>
+                                <option>Kinondoni</option>
+                                <option>Ilala</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-sw="Simu" data-en="Phone"></label>
+                            <input type="tel" placeholder="+255 7XX XXX XXX" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-sw="Idadi ya Watoto" data-en="Number of Children"></label>
+                            <input type="number" placeholder="e.g. 25" />
+                        </div>
+                        <div class="form-group">
+                            <label data-sw="Idadi ya Walezi" data-en="Number of Caregivers"></label>
+                            <input type="number" placeholder="e.g. 3" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-sw="Hali ya Leseni" data-en="License Status"></label>
+                        <select>
+                            <option value="" data-sw="Chagua..." data-en="Select..."></option>
+                            <option data-sw="Imesajiliwa kikamilifu" data-en="Fully Licensed">Imesajiliwa kikamilifu</option>
+                            <option data-sw="Inasubiri" data-en="Pending">Inasubiri</option>
+                            <option data-sw="Haijaomba" data-en="Not Applied">Haijaomba</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" data-sw="Wasilisha Maombi" data-en="Submit Application"></button>
+                </form>
+                <div class="form-success hidden" id="formSuccess">
+                    <div class="success-icon">&#x2705;</div>
+                    <h4 data-sw="Maombi Yamepokelewa!" data-en="Application Received!"></h4>
+                    <p data-sw="Sekretarieti ya UVIWADA itawasiliana nawe ndani ya siku 3 za kazi." data-en="UVIWADA Secretariat will contact you within 3 working days."></p>
+                </div>
+            </div>
+            <div class="portal-features">
+                <h3 data-sw="Baada ya Kujiunga Utapata:" data-en="After Joining You Get:"></h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-check">&#x2713;</span>
+                        <div>
+                            <strong data-sw="Wasifu wa Kituo Mtandaoni" data-en="Online Centre Profile"></strong>
+                            <p data-sw="Onesha kituo chako kwenye orodha ya wanachama" data-en="Showcase your centre in the member directory"></p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">&#x2713;</span>
+                        <div>
+                            <strong data-sw="Tathmini za Ubora" data-en="Quality Assessments"></strong>
+                            <p data-sw="Fuatilia maendeleo yako na taa za trafiki" data-en="Track your progress with traffic-light ratings"></p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">&#x2713;</span>
+                        <div>
+                            <strong data-sw="Kalenda ya Mafunzo" data-en="Training Calendar"></strong>
+                            <p data-sw="Jiandikishe kwa mafunzo na upate vyeti" data-en="Register for trainings and earn certificates"></p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">&#x2713;</span>
+                        <div>
+                            <strong data-sw="Msaada wa Leseni" data-en="Licensing Support"></strong>
+                            <p data-sw="Vikumbusho vya muda wa kuisha na masasisho ya kanuni" data-en="Expiry reminders and regulatory updates"></p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">&#x2713;</span>
+                        <div>
+                            <strong data-sw="Mtandao wa Wenzao" data-en="Peer Network"></strong>
+                            <p data-sw="Jifunze kutoka kwa wamiliki wengine wa vituo" data-en="Learn from other centre owners"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact -->
+<section class="section section-alt" id="contact">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag" data-sw="Wasiliana Nasi" data-en="Contact Us"></span>
+            <h2 data-sw="Wasiliana na UVIWADA" data-en="Get in Touch with UVIWADA"></h2>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info">
+                <div class="contact-item">
+                    <span class="contact-icon">&#x1F4CD;</span>
+                    <div>
+                        <strong>Dar es Salaam, Tanzania</strong>
+                        <p data-sw="Sekretarieti ya UVIWADA" data-en="UVIWADA Secretariat"></p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">&#x1F4E7;</span>
+                    <div>
+                        <strong>uviwadatz@gmail.com</strong>
+                        <p data-sw="Barua pepe rasmi" data-en="Official email"></p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">&#x1F310;</span>
+                    <div>
+                        <strong data-sw="Ushirikiano wa Kimkakati" data-en="Strategic Partnership"></strong>
+                        <p>Children in Crossfire (CiC) - Dar Urban ECCE Programme</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo">
+                    <div class="logo-mark">U</div>
+                    <div class="logo-text">
+                        <strong>UVIWADA</strong>
+                        <small>Dar es Salaam</small>
+                    </div>
+                </div>
+                <p data-sw="Umoja wa Vituo vya Watoto wa Dar es Salaam. Kuimarisha sekta ya malezi ya watoto kupitia uratibu, uwakilishi na huduma za kidijitali." data-en="Daycare Centres Association of Dar es Salaam. Strengthening the childcare sector through coordination, representation and digital services."></p>
+            </div>
+            <div class="footer-links">
+                <h4 data-sw="Viungo" data-en="Links"></h4>
+                <a href="#about" data-sw="Kuhusu" data-en="About">Kuhusu</a>
+                <a href="#services" data-sw="Huduma" data-en="Services">Huduma</a>
+                <a href="#dashboard" data-sw="Takwimu" data-en="Dashboard">Takwimu</a>
+                <a href="#contact" data-sw="Wasiliana" data-en="Contact">Wasiliana</a>
+            </div>
+            <div class="footer-links">
+                <h4 data-sw="Washirika" data-en="Partners"></h4>
+                <span>Children in Crossfire</span>
+                <span>Conrad N. Hilton Foundation</span>
+                <span data-sw="Mpango wa NMECDP" data-en="NMECDP Framework">Mpango wa NMECDP</span>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 UVIWADA. <span data-sw="Haki zote zimehifadhiwa." data-en="All rights reserved."></span></p>
+            <p class="footer-credit" data-sw="Jukwaa limetengenezwa na 7Square Group Limited" data-en="Platform developed by 7Square Group Limited"></p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
