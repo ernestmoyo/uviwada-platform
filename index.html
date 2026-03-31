@@ -207,11 +207,11 @@
                 <div class="dash-charts">
                     <div class="chart-box">
                         <h4 data-sw="Usambazaji wa Ubora wa Wanachama" data-en="Member Quality Distribution"></h4>
-                        <canvas id="qualityChart" height="200"></canvas>
+                        <canvas id="qualityChart"></canvas>
                     </div>
                     <div class="chart-box">
                         <h4 data-sw="Ukuaji wa Uanachama" data-en="Membership Growth"></h4>
-                        <canvas id="growthChart" height="200"></canvas>
+                        <canvas id="growthChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -268,7 +268,14 @@
                 <div class="legend-item"><span class="legend-dot amber"></span><span data-sw="Unahitaji Kuboresha" data-en="Needs Improvement"></span></div>
                 <div class="legend-item"><span class="legend-dot red"></span><span data-sw="Chini ya Kiwango" data-en="Below Standard"></span></div>
             </div>
-            <div id="mapView" style="height: 450px; border-radius: 12px;"></div>
+            <div id="mapView" style="height: 500px;"></div>
+            <div class="map-district-legend">
+                <div class="district-tag"><span class="district-swatch" style="background:#7A2040"></span> Kinondoni</div>
+                <div class="district-tag"><span class="district-swatch" style="background:#E67E22"></span> Ilala</div>
+                <div class="district-tag"><span class="district-swatch" style="background:#2E86C1"></span> Temeke</div>
+                <div class="district-tag"><span class="district-swatch" style="background:#5BAA4A"></span> Kigamboni</div>
+                <div class="district-tag"><span class="district-swatch" style="background:#8E44AD"></span> Ubungo</div>
+            </div>
         </div>
     </div>
 </section>
@@ -286,13 +293,13 @@
                 <p class="form-note" data-sw="Jaza taarifa zako kuanza mchakato wa uanachama" data-en="Fill in your details to begin the membership process"></p>
                 <form class="demo-form" onsubmit="handleRegistration(event)">
                     <div class="form-group">
-                        <label data-sw="Jina la Kituo" data-en="Centre Name"></label>
-                        <input type="text" placeholder="e.g. Mama Amina Daycare Centre" />
+                        <label for="centre-name" data-sw="Jina la Kituo" data-en="Centre Name"></label>
+                        <input id="centre-name" type="text" placeholder="e.g. Mama Amina Daycare Centre" required />
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label data-sw="Kata" data-en="Ward"></label>
-                            <select>
+                            <label for="ward" data-sw="Kata" data-en="Ward"></label>
+                            <select id="ward" required>
                                 <option value="">--</option>
                                 <option>Vingunguti</option>
                                 <option>Manzese</option>
@@ -305,23 +312,23 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label data-sw="Simu" data-en="Phone"></label>
-                            <input type="tel" placeholder="+255 7XX XXX XXX" />
+                            <label for="phone" data-sw="Simu" data-en="Phone"></label>
+                            <input id="phone" type="tel" placeholder="+255 7XX XXX XXX" required />
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label data-sw="Idadi ya Watoto" data-en="Number of Children"></label>
-                            <input type="number" placeholder="e.g. 25" />
+                            <label for="children-count" data-sw="Idadi ya Watoto" data-en="Number of Children"></label>
+                            <input id="children-count" type="number" placeholder="e.g. 25" required />
                         </div>
                         <div class="form-group">
-                            <label data-sw="Idadi ya Walezi" data-en="Number of Caregivers"></label>
-                            <input type="number" placeholder="e.g. 3" />
+                            <label for="caregiver-count" data-sw="Idadi ya Walezi" data-en="Number of Caregivers"></label>
+                            <input id="caregiver-count" type="number" placeholder="e.g. 3" required />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label data-sw="Hali ya Leseni" data-en="License Status"></label>
-                        <select>
+                        <label for="license-status" data-sw="Hali ya Leseni" data-en="License Status"></label>
+                        <select id="license-status" required>
                             <option value="" data-sw="Chagua..." data-en="Select..."></option>
                             <option data-sw="Imesajiliwa kikamilifu" data-en="Fully Licensed">Imesajiliwa kikamilifu</option>
                             <option data-sw="Inasubiri" data-en="Pending">Inasubiri</option>
