@@ -165,7 +165,7 @@ function initMap() {
 
     // District colors for ward boundaries
     var districtColors = {
-        'Kinondoni': '#7A2040',
+        'Kinondoni': '#1A5FAA',
         'Ilala': '#E67E22',
         'Temeke': '#2E86C1',
         'Kigamboni': '#5BAA4A',
@@ -291,11 +291,11 @@ function initCharts() {
                 datasets: [{
                     label: 'Members',
                     data: [82, 89, 95, 104, 112, 118, 128, 139, 147],
-                    borderColor: '#7A2040',
-                    backgroundColor: 'rgba(122,32,64,0.08)',
+                    borderColor: '#1A5FAA',
+                    backgroundColor: 'rgba(26,95,170,0.08)',
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#7A2040',
+                    pointBackgroundColor: '#1A5FAA',
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     borderWidth: 2.5
