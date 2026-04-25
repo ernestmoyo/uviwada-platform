@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <!-- Adult figure (blue) -->
+  <circle cx="32" cy="14" r="10" fill="#1A5FAA"/>
+  <path d="M32 26 C20 26 14 38 16 52 L22 52 L26 36 L32 48 L38 36 L42 52 L48 52 C50 38 44 26 32 26Z" fill="#1A5FAA"/>
+  <!-- Child figure (red) -->
+  <circle cx="52" cy="24" r="7.5" fill="#D42027"/>
+  <path d="M52 33 C44 33 40 42 41 52 L46 52 L48 40 L52 48 L56 40 L58 52 L63 52 C64 42 60 33 52 33Z" fill="#D42027"/>
+  <!-- Swoosh connecting them -->
+  <path d="M18 54 Q35 62 62 54" stroke="#1A5FAA" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- UVIWADA text -->
+  <text x="80" y="42" font-family="'Inter','Segoe UI',Arial,sans-serif" font-size="32" font-weight="800" fill="#1A5FAA" letter-spacing="1">UVIWADA</text>
+  <!-- MTOTO KWANZA text -->
+  <text x="80" y="62" font-family="'Inter','Segoe UI',Arial,sans-serif" font-size="14" font-weight="700" fill="#D42027" letter-spacing="2.5">MTOTO KWANZA</text>
+</svg>
