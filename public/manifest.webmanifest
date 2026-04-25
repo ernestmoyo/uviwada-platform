@@ -1,0 +1,39 @@
+{
+  "name": "UVIWADA Assessor",
+  "short_name": "UVIWADA",
+  "description": "On-site quality assessment tool for UVIWADA daycare centres. Works offline; syncs when online.",
+  "start_url": "/assess",
+  "display": "standalone",
+  "background_color": "#1A5FAA",
+  "theme_color": "#1A5FAA",
+  "orientation": "portrait",
+  "lang": "sw",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/main_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Record assessment",
+      "short_name": "Assess",
+      "url": "/assess"
+    },
+    {
+      "name": "My centre",
+      "short_name": "Portal",
+      "url": "/portal"
+    }
+  ]
+}

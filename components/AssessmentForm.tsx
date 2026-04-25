@@ -7,6 +7,24 @@ import { useI18n } from '@/lib/i18n'
 import { CHECKLIST, DIMENSIONS, ratingFromScore } from '@/lib/quality-checklist'
 import type { QualityDimension, QualityRating } from '@/lib/types/database'
 
+async function queueLocally(payload: unknown): Promise<void> {
+  if (typeof indexedDB === 'undefined') throw new Error('No IndexedDB')
+  const db = await new Promise<IDBDatabase>((resolve, reject) => {
+    const req = indexedDB.open('uviwada-sync', 1)
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore('pending-assessments', { keyPath: 'id', autoIncrement: true })
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction('pending-assessments', 'readwrite')
+    tx.objectStore('pending-assessments').add({ payload, queued_at: Date.now() })
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
 export interface AssessmentFormMember {
   id: string
   centre_name: string
@@ -107,13 +125,23 @@ export function AssessmentForm({ members, defaultMemberId, variant = 'admin' }: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      if (!res.ok) {
-        const json = (await res.json()) as { error?: string; detail?: string }
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        queued?: boolean
+        message?: string
+        error?: string
+        detail?: string
+      }
+      if (!res.ok && res.status !== 202) {
         setError(json.detail ?? json.error ?? 'Failed to save')
         setSubmitting(false)
         return
       }
-      setSuccess(`Saved — rating ${rating.toUpperCase()} (${passedCount}/${CHECKLIST.length}).`)
+      if (json.queued) {
+        setSuccess(`Saved offline — will sync when online (rating ${rating.toUpperCase()}, ${passedCount}/${CHECKLIST.length}).`)
+      } else {
+        setSuccess(`Saved — rating ${rating.toUpperCase()} (${passedCount}/${CHECKLIST.length}).`)
+      }
       setSubmitting(false)
       setScores({})
       setNotes('')
@@ -121,7 +149,17 @@ export function AssessmentForm({ members, defaultMemberId, variant = 'admin' }: 
       setPhotos([])
       router.refresh()
     } catch {
-      setError('Network error')
+      // Network gone AND service worker not active — queue manually
+      try {
+        await queueLocally(payload)
+        setSuccess(`Saved offline — will sync when online (rating ${rating.toUpperCase()}, ${passedCount}/${CHECKLIST.length}).`)
+        setScores({})
+        setNotes('')
+        setFollowUp('')
+        setPhotos([])
+      } catch {
+        setError('Network error and offline storage unavailable')
+      }
       setSubmitting(false)
     }
   }

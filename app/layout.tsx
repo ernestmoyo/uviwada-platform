@@ -3,13 +3,17 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 import { I18nProvider } from '@/lib/i18n'
+import { PWARegister } from '@/components/PWARegister'
 
 export const metadata: Metadata = {
   title: 'UVIWADA — Umoja wa Vituo vya Watoto wa Dar es Salaam',
   description:
     'UVIWADA digital platform connecting, supporting and elevating daycare centres in Dar es Salaam in partnership with Children in Crossfire.',
+  manifest: '/manifest.webmanifest',
+  themeColor: '#1A5FAA',
   icons: {
-    icon: '/logo.svg'
+    icon: '/logo.svg',
+    apple: '/main_logo.png'
   }
 }
 
@@ -32,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <I18nProvider>{children}</I18nProvider>
+        <PWARegister />
       </body>
     </html>
   )

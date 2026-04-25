@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 
 import { AssessmentForm } from '@/components/AssessmentForm'
+import { InstallPrompt } from '@/components/InstallPrompt'
+import { OfflineBanner } from '@/components/OfflineBanner'
 import { PortalNav } from '@/components/PortalNav'
 import { fetchMembersForOrg } from '@/lib/admin-data'
 import { getCurrentUser } from '@/lib/auth'
@@ -29,10 +31,14 @@ export default async function AssessPage() {
           <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>
             {user.ward ? `${user.ward} ward` : 'All centres'}
           </h1>
-          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             {assignedMembers.length} centre{assignedMembers.length === 1 ? '' : 's'} in your scope. Tap each item;
-            the rating updates live.
+            the rating updates live. Works fully offline once installed.
           </p>
+
+          <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <InstallPrompt compact />
+          </div>
 
           <AssessmentForm
             members={assignedMembers.map((m) => ({ id: m.id, centre_name: m.centre_name, ward: m.ward }))}
@@ -40,6 +46,7 @@ export default async function AssessPage() {
           />
         </div>
       </main>
+      <OfflineBanner />
     </>
   )
 }

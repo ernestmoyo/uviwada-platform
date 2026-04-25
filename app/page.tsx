@@ -1,6 +1,7 @@
 import { About } from '@/components/About'
 import { Contact } from '@/components/Contact'
 import { Dashboard } from '@/components/Dashboard'
+import { FieldToolSection } from '@/components/FieldToolSection'
 import { Footer } from '@/components/Footer'
 import { Hero } from '@/components/Hero'
 import { MapSection } from '@/components/MapSection'
@@ -32,6 +33,7 @@ export default async function HomePage() {
         <Services />
         <Dashboard snapshot={snapshot} />
         <MapSection centres={centres} />
+        <FieldToolSection />
         <PortalCta />
         <Contact />
       </main>
