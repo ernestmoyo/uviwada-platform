@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '#services', sw: 'Huduma', en: 'Services' },
   { href: '#dashboard', sw: 'Takwimu', en: 'Dashboard' },
   { href: '#map', sw: 'Ramani', en: 'Map' },
+  { href: '#field-app', sw: 'App ya Uwandani', en: 'Field App' },
   { href: '#contact', sw: 'Wasiliana', en: 'Contact' }
 ] as const
 
@@ -65,8 +66,8 @@ export function NavBar() {
             </li>
           ))}
           <li>
-            <Link href="/portal" className="btn-nav" onClick={() => setOpen(false)}>
-              {lang === 'sw' ? 'Ingia Portalini' : 'Member Login'}
+            <Link href="/login" className="btn-nav" onClick={() => setOpen(false)}>
+              {lang === 'sw' ? 'Ingia Portalini' : 'Sign in'}
             </Link>
           </li>
         </ul>
