@@ -10,7 +10,11 @@ import { Services } from '@/components/Services'
 import { TopBar } from '@/components/TopBar'
 import { fetchDashboardSnapshot, fetchPublicCentres } from '@/lib/data'
 
-export const revalidate = 60
+// Force dynamic so Vercel doesn't try to statically prerender the live data.
+// fetchPublicCentres() / fetchDashboardSnapshot() use the cookieless admin
+// client and try/catch back to seed values, so this is safe.
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function HomePage() {
   const [centres, snapshot] = await Promise.all([fetchPublicCentres(), fetchDashboardSnapshot()])

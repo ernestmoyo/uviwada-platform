@@ -1,6 +1,10 @@
 import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
+// Cookie-aware client — only call from request-scoped contexts (Server
+// Components in dynamic pages, Route Handlers, Server Actions). Reads / writes
+// the demo session cookie via @supabase/ssr.
 export function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -19,28 +23,29 @@ export function getSupabaseServer() {
             cookieStore.set(name, value, options)
           })
         } catch {
-          // Called from a Server Component; the middleware refreshes the session
-          // on the next request. This is a normal no-op for read-only RSC contexts.
+          // RSC read-only context — middleware refreshes on the next request.
         }
       }
     }
   })
 }
 
+// Cookieless client for public reads + admin writes. Uses the service-role
+// key so RLS is bypassed; never expose this to the browser. Safe to call from
+// any server context (RSC, Route Handlers, build time) because it has no
+// cookies()/headers() dependency.
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return null
-  return createServerClient(url, key, {
-    cookies: {
-      getAll: () => [],
-      setAll: () => {}
-    }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
   })
 }
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   )
 }
