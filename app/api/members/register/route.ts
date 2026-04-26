@@ -40,13 +40,39 @@ export async function POST(request: Request) {
   try {
     payload = registrationSchema.parse(await request.json())
   } catch (err) {
-    return NextResponse.json({ error: 'Invalid form data', detail: String(err) }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Some required fields are missing or invalid. Please check the form and try again.' },
+      { status: 400 }
+    )
   }
 
   const userId = randomUUID()
   const memberId = randomUUID()
 
-  // Insert member first (FK to user is nullable)
+  // Step 1: Insert app_user FIRST with member_id = null. Required because
+  //   members.owner_user_id  → app_users.id  (FK)
+  //   app_users.member_id    → members.id    (FK, nullable)
+  // We start by creating only the side that has no incoming FK requirement,
+  // then insert the member, then back-fill app_users.member_id.
+  const { error: userErr } = await supabase.from('app_users').insert({
+    id: userId,
+    org_id: UVIWADA_DAR_ORG_ID,
+    role: 'member',
+    full_name: payload.owner_full_name,
+    email: payload.email || null,
+    phone: payload.phone,
+    member_id: null,
+    ward: payload.ward
+  })
+  if (userErr) {
+    console.error('register: failed to create app_user', userErr)
+    return NextResponse.json(
+      { error: 'Could not create your account. Please try again or contact UVIWADA support.' },
+      { status: 500 }
+    )
+  }
+
+  // Step 2: Insert the member, now safely referencing the user.
   const { error: memberErr } = await supabase.from('members').insert({
     id: memberId,
     org_id: UVIWADA_DAR_ORG_ID,
@@ -72,27 +98,26 @@ export async function POST(request: Request) {
     latest_quality: null
   })
   if (memberErr) {
-    return NextResponse.json({ error: 'Failed to create centre', detail: memberErr.message }, { status: 500 })
+    // Roll back the user since the member insert failed
+    await supabase.from('app_users').delete().eq('id', userId)
+    console.error('register: failed to create member', memberErr)
+    return NextResponse.json(
+      { error: 'Could not create your centre. Please try again or contact UVIWADA support.' },
+      { status: 500 }
+    )
   }
 
-  // Create the owner user
-  const { error: userErr } = await supabase.from('app_users').insert({
-    id: userId,
-    org_id: UVIWADA_DAR_ORG_ID,
-    role: 'member',
-    full_name: payload.owner_full_name,
-    email: payload.email || null,
-    phone: payload.phone,
-    member_id: memberId,
-    ward: payload.ward
-  })
-  if (userErr) {
-    // Roll back the member if the user insert failed
-    await supabase.from('members').delete().eq('id', memberId)
-    return NextResponse.json({ error: 'Failed to create user', detail: userErr.message }, { status: 500 })
+  // Step 3: Back-fill the app_user's member_id so /portal can resolve their centre.
+  const { error: linkErr } = await supabase
+    .from('app_users')
+    .update({ member_id: memberId })
+    .eq('id', userId)
+  if (linkErr) {
+    // Both rows exist; the link can be repaired by an admin. Log and continue.
+    console.error('register: failed to back-link app_user.member_id', linkErr)
   }
 
-  // Issue the demo session cookie so they're logged in immediately
+  // Step 4: Issue the demo session cookie so they're logged in immediately.
   const response = NextResponse.json({
     ok: true,
     member_id: memberId,

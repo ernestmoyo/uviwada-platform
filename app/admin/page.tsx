@@ -17,13 +17,22 @@ export default async function AdminOverviewPage() {
   const tenant = getCurrentTenant()
   const stats = await fetchTenantStats(tenant.id)
 
+  const roleLabel =
+    user.role === 'admin'
+      ? 'Platform Admin Console'
+      : user.role === 'cic_staff'
+        ? 'CiC Programme Console'
+        : user.role === 'assessor'
+          ? 'Assessor Console'
+          : 'Secretariat Console'
+
   return (
     <>
       <AdminNav fullName={user.full_name} role={user.role} currentTenantId={tenant.id} />
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 110px)', padding: '2rem 0' }}>
         <div className="container">
           <div style={{ marginBottom: '1.5rem' }}>
-            <span className="section-tag">Secretariat Console</span>
+            <span className="section-tag">{roleLabel}</span>
             <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{tenant.label_en}</h1>
             <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
               {tenant.scope === 'national' ? 'National federation view' : 'Regional association view'}

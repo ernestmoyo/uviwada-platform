@@ -1,7 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 import { SEED_USER_PRESETS } from '@/lib/auth-presets'
@@ -18,11 +17,18 @@ interface LoginRoleSwitcherProps {
 
 export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
   const { lang } = useI18n()
-  const router = useRouter()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [hydrated, setHydrated] = useState(false)
+
+  // Disable buttons until React has hydrated to prevent the click-eats-itself
+  // race some users hit when arriving from /assess → /login redirect.
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   async function loginAs(userId: string) {
+    if (!hydrated || busyId) return
     setBusyId(userId)
     setError(null)
     try {
@@ -37,10 +43,12 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
         setBusyId(null)
         return
       }
-      router.push(json.redirect)
-      router.refresh()
+      // Hard navigation guarantees the new session cookie ships on the
+      // very next request — softer router.push has occasionally raced with
+      // the cookie write on slow Vercel cold starts.
+      window.location.assign(json.redirect)
     } catch {
-      setError('Network error')
+      setError('Network error — please check your connection and try again.')
       setBusyId(null)
     }
   }

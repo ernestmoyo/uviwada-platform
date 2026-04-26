@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
@@ -8,7 +7,6 @@ import { WARDS_BY_DISTRICT } from '@/lib/seed-data'
 
 export function RegisterForm() {
   const { lang } = useI18n()
-  const router = useRouter()
   const [district, setDistrict] = useState<string>('Kinondoni')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,16 +26,16 @@ export function RegisterForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      const json = (await res.json()) as { ok?: boolean; redirect?: string; error?: string; detail?: string }
+      const json = (await res.json()) as { ok?: boolean; redirect?: string; error?: string }
       if (!res.ok || !json.ok) {
-        setError(json.detail ?? json.error ?? 'Registration failed')
+        setError(json.error ?? 'Registration failed')
         setSubmitting(false)
         return
       }
-      router.push(json.redirect ?? '/portal')
-      router.refresh()
+      // Hard nav so the freshly-issued session cookie is sent on the next request.
+      window.location.assign(json.redirect ?? '/portal')
     } catch {
-      setError('Network error')
+      setError('Network error — please check your connection and try again.')
       setSubmitting(false)
     }
   }
@@ -141,7 +139,12 @@ export function RegisterForm() {
         </div>
         <div className="form-group">
           <label htmlFor="license_expiry">{lang === 'sw' ? 'Tarehe ya Kuisha' : 'Expiry Date'}</label>
-          <input id="license_expiry" name="license_expiry" type="date" />
+          <input
+            id="license_expiry"
+            name="license_expiry"
+            type="date"
+            min={new Date().toISOString().slice(0, 10)}
+          />
         </div>
       </div>
 

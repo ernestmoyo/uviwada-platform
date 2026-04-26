@@ -75,7 +75,8 @@ export async function fetchPublicCentres(): Promise<PublicCentre[]> {
       quality: (m.latest_quality ?? 'green') as QualityRating,
       children: m.children_count
     }))
-  } catch {
+  } catch (err) {
+    console.error('fetchPublicCentres: falling back to seed', err)
     return SEED_FALLBACK_CENTRES()
   }
 }
@@ -135,7 +136,8 @@ export async function fetchDashboardSnapshot(): Promise<DashboardSnapshot> {
       qualityDistribution: counts,
       membershipGrowth: { labels, data: series }
     }
-  } catch {
+  } catch (err) {
+    console.error('fetchDashboardSnapshot: falling back to seed', err)
     return FALLBACK_DASHBOARD.uviwada
   }
 }

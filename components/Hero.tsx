@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 
@@ -13,25 +13,45 @@ interface HeroProps {
 export function Hero({ totalMembers, childrenReached }: HeroProps) {
   const { lang } = useI18n()
   const statsRef = useRef<HTMLDivElement | null>(null)
+  // Animated values live in React state so re-renders (e.g. language toggle)
+  // don't overwrite imperative DOM mutations and reset numbers to 0.
+  const [counts, setCounts] = useState({ members: 0, districts: 0, children: 0 })
   const animatedRef = useRef(false)
 
   useEffect(() => {
     if (!statsRef.current || animatedRef.current) return
+    const node = statsRef.current
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !animatedRef.current) {
             animatedRef.current = true
-            animateCounters(entry.target as HTMLElement)
+            animate(totalMembers, 5, childrenReached, setCounts)
             observer.unobserve(entry.target)
           }
         })
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     )
-    observer.observe(statsRef.current)
+    observer.observe(node)
     return () => observer.disconnect()
-  }, [])
+  }, [totalMembers, childrenReached])
+
+  // If the section is already in view on first paint (e.g. very tall viewport
+  // or hard refresh) the IO won't fire — kick the animator after a tick.
+  useEffect(() => {
+    if (animatedRef.current) return
+    const t = window.setTimeout(() => {
+      if (!animatedRef.current && statsRef.current) {
+        const rect = statsRef.current.getBoundingClientRect()
+        if (rect.top < window.innerHeight) {
+          animatedRef.current = true
+          animate(totalMembers, 5, childrenReached, setCounts)
+        }
+      }
+    }, 600)
+    return () => window.clearTimeout(t)
+  }, [totalMembers, childrenReached])
 
   return (
     <section className="hero" id="home">
@@ -70,22 +90,16 @@ export function Hero({ totalMembers, childrenReached }: HeroProps) {
         </div>
         <div className="hero-stats" ref={statsRef}>
           <div className="stat">
-            <span className="stat-num" data-count={totalMembers}>
-              0
-            </span>
+            <span className="stat-num">{counts.members.toLocaleString()}</span>
             <span>+</span>
             <span className="stat-label">{lang === 'sw' ? 'Vituo vya Wanachama' : 'Member Centres'}</span>
           </div>
           <div className="stat">
-            <span className="stat-num" data-count={5}>
-              0
-            </span>
+            <span className="stat-num">{counts.districts}</span>
             <span className="stat-label">{lang === 'sw' ? 'Wilaya za Dar' : 'Dar Districts'}</span>
           </div>
           <div className="stat">
-            <span className="stat-num" data-count={childrenReached}>
-              0
-            </span>
+            <span className="stat-num">{counts.children.toLocaleString()}</span>
             <span>+</span>
             <span className="stat-label">{lang === 'sw' ? 'Watoto Wanaofaidika' : 'Children Reached'}</span>
           </div>
@@ -95,23 +109,28 @@ export function Hero({ totalMembers, childrenReached }: HeroProps) {
   )
 }
 
-function animateCounters(root: HTMLElement) {
-  const targets = root.querySelectorAll<HTMLSpanElement>('.stat-num[data-count]')
-  targets.forEach((el) => {
-    const target = parseInt(el.dataset.count ?? '0', 10)
-    const duration = 1500
-    let startTime: number | null = null
-    function step(timestamp: number) {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      el.textContent = Math.floor(eased * target).toLocaleString()
-      if (progress < 1) {
-        requestAnimationFrame(step)
-      } else {
-        el.textContent = target.toLocaleString()
-      }
+function animate(
+  members: number,
+  districts: number,
+  children: number,
+  setCounts: (next: { members: number; districts: number; children: number }) => void
+) {
+  const duration = 1500
+  let start: number | null = null
+  function step(ts: number) {
+    if (start == null) start = ts
+    const progress = Math.min((ts - start) / duration, 1)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    setCounts({
+      members: Math.floor(eased * members),
+      districts: Math.floor(eased * districts),
+      children: Math.floor(eased * children)
+    })
+    if (progress < 1) {
+      requestAnimationFrame(step)
+    } else {
+      setCounts({ members, districts, children })
     }
-    requestAnimationFrame(step)
-  })
+  }
+  requestAnimationFrame(step)
 }
