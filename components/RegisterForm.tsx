@@ -1,24 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 import { WARDS_BY_DISTRICT } from '@/lib/seed-data'
+
+// Fallback coordinates per Dar district — used only when the browser denies
+// geolocation. Better than NULL (which excludes the centre from the public
+// map) and accurate enough at ward-level for the GIS overview.
+const DISTRICT_FALLBACK_GPS: Record<string, { lat: number; lng: number }> = {
+  Kinondoni: { lat: -6.77, lng: 39.26 },
+  Ilala: { lat: -6.82, lng: 39.27 },
+  Temeke: { lat: -6.87, lng: 39.29 },
+  Kigamboni: { lat: -6.85, lng: 39.32 },
+  Ubungo: { lat: -6.78, lng: 39.21 }
+}
 
 export function RegisterForm() {
   const { lang } = useI18n()
   const [district, setDistrict] = useState<string>('Kinondoni')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null)
 
   const wards = WARDS_BY_DISTRICT[district] ?? []
+
+  // Try once, non-blocking, to capture a real GPS fix
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {
+        // user denied or timeout — district fallback used at submit
+      },
+      { timeout: 6000, enableHighAccuracy: false }
+    )
+  }, [])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
     const fd = new FormData(e.currentTarget)
-    const payload = Object.fromEntries(fd.entries())
+    const payload = Object.fromEntries(fd.entries()) as Record<string, FormDataEntryValue>
+    const fallback = DISTRICT_FALLBACK_GPS[district] ?? DISTRICT_FALLBACK_GPS.Kinondoni
+    payload.lat = String(gps?.lat ?? fallback.lat)
+    payload.lng = String(gps?.lng ?? fallback.lng)
 
     try {
       const res = await fetch('/api/members/register', {
