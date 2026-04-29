@@ -2,27 +2,40 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 
 const NAV_ITEMS = [
-  { href: '#home', sw: 'Nyumbani', en: 'Home' },
-  { href: '#about', sw: 'Kuhusu', en: 'About' },
-  { href: '#services', sw: 'Huduma', en: 'Services' },
-  { href: '#dashboard', sw: 'Takwimu', en: 'Dashboard' },
-  { href: '#map', sw: 'Ramani', en: 'Map' },
-  { href: '#field-app', sw: 'App ya Uwandani', en: 'Field App' },
-  { href: '#contact', sw: 'Wasiliana', en: 'Contact' }
+  { id: 'home', sw: 'Nyumbani', en: 'Home' },
+  { id: 'about', sw: 'Kuhusu', en: 'About' },
+  { id: 'services', sw: 'Huduma', en: 'Services' },
+  { id: 'dashboard', sw: 'Takwimu', en: 'Dashboard' },
+  { id: 'map', sw: 'Ramani', en: 'Map' },
+  { id: 'field-app', sw: 'App ya Uwandani', en: 'Field App' },
+  { id: 'contact', sw: 'Wasiliana', en: 'Contact' }
 ] as const
 
 export function NavBar() {
   const { lang } = useI18n()
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [activeId, setActiveId] = useState<string>('home')
 
+  const isHome = pathname === '/'
+
+  // On the homepage we use bare hash anchors so the browser smooth-scrolls.
+  // On any other route we use `/#section` so Next.js navigates back home
+  // first and then jumps to the section.
+  const sectionHref = (id: string) => (isHome ? `#${id}` : `/#${id}`)
+
   useEffect(() => {
+    if (!isHome) {
+      setScrolled(true)
+      return
+    }
     function onScroll() {
       setScrolled(window.scrollY > 50)
       const scrollPos = window.scrollY + 120
@@ -40,12 +53,12 @@ export function NavBar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [isHome])
 
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} id="navbar">
       <div className="container nav-inner">
-        <Link href="#home" className="logo" onClick={() => setOpen(false)}>
+        <Link href="/" className="logo" onClick={() => setOpen(false)}>
           <Image src="/logo.svg" alt="UVIWADA - Mtoto Kwanza" width={140} height={44} className="logo-img" priority />
         </Link>
         <button className="menu-btn" onClick={() => setOpen((v) => !v)} aria-label="Menu">
@@ -55,14 +68,14 @@ export function NavBar() {
         </button>
         <ul className={`nav-links ${open ? 'open' : ''}`}>
           {NAV_ITEMS.map((item) => (
-            <li key={item.href}>
-              <a
-                href={item.href}
-                className={activeId === item.href.slice(1) ? 'active' : ''}
+            <li key={item.id}>
+              <Link
+                href={sectionHref(item.id)}
+                className={isHome && activeId === item.id ? 'active' : ''}
                 onClick={() => setOpen(false)}
               >
                 {lang === 'sw' ? item.sw : item.en}
-              </a>
+              </Link>
             </li>
           ))}
           <li>
