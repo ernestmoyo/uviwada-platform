@@ -5,36 +5,63 @@ import { useMemo, useState } from 'react'
 import type { AdminMember } from '@/lib/admin-data'
 import type { LicenseStatus, QualityRating } from '@/lib/types/database'
 
+export interface MembersTableInitialFilters {
+  q?: string
+  ward?: string
+  district?: string
+  quality?: string
+  license?: string
+}
+
 interface MembersTableProps {
   members: AdminMember[]
   readOnly?: boolean
+  initialFilters?: MembersTableInitialFilters
 }
 
 const QUALITY_OPTIONS: Array<QualityRating | 'all'> = ['all', 'green', 'amber', 'red']
 const LICENSE_OPTIONS: Array<LicenseStatus | 'all'> = ['all', 'fully_licensed', 'pending', 'not_applied', 'expired']
 
-export function MembersTable({ members, readOnly = false }: MembersTableProps) {
-  const [search, setSearch] = useState('')
-  const [ward, setWard] = useState('all')
-  const [quality, setQuality] = useState<string>('all')
-  const [license, setLicense] = useState<string>('all')
+export function MembersTable({ members, readOnly = false, initialFilters = {} }: MembersTableProps) {
+  const [search, setSearch] = useState(initialFilters.q ?? '')
+  const [ward, setWard] = useState(initialFilters.ward ?? 'all')
+  const [district, setDistrict] = useState(initialFilters.district ?? 'all')
+  const [quality, setQuality] = useState<string>(initialFilters.quality ?? 'all')
+  const [license, setLicense] = useState<string>(initialFilters.license ?? 'all')
 
   const wards = useMemo(() => Array.from(new Set(members.map((m) => m.ward))).sort(), [members])
+  const districts = useMemo(() => Array.from(new Set(members.map((m) => m.district))).sort(), [members])
 
   const filtered = useMemo(() => {
+    const needle = search.trim().toLowerCase()
     return members.filter((m) => {
-      if (search && !m.centre_name.toLowerCase().includes(search.toLowerCase())) return false
+      if (needle) {
+        const haystack = `${m.centre_name} ${m.ward} ${m.district}`.toLowerCase()
+        if (!haystack.includes(needle)) return false
+      }
       if (ward !== 'all' && m.ward !== ward) return false
+      if (district !== 'all' && m.district !== district) return false
       if (quality !== 'all' && (m.latest_quality ?? '') !== quality) return false
       if (license !== 'all' && m.license_status !== license) return false
       return true
     })
-  }, [members, search, ward, quality, license])
+  }, [members, search, ward, district, quality, license])
+
+  const activeFilters = (search ? 1 : 0) + (ward !== 'all' ? 1 : 0) + (district !== 'all' ? 1 : 0) + (quality !== 'all' ? 1 : 0) + (license !== 'all' ? 1 : 0)
+
+  function clearAll() {
+    setSearch('')
+    setWard('all')
+    setDistrict('all')
+    setQuality('all')
+    setLicense('all')
+  }
 
   function exportCsv() {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
     if (ward !== 'all') params.set('ward', ward)
+    if (district !== 'all') params.set('district', district)
     if (quality !== 'all') params.set('quality', quality)
     if (license !== 'all') params.set('license', license)
     window.location.href = `/api/members/export?${params.toString()}`
@@ -51,11 +78,19 @@ export function MembersTable({ members, readOnly = false }: MembersTableProps) {
         }}
       >
         <input
-          placeholder="Search centre name…"
+          placeholder="Search name, ward, district…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ padding: '0.5rem 0.7rem', border: '1px solid var(--border)', borderRadius: 8 }}
         />
+        <select value={district} onChange={(e) => setDistrict(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid var(--border)' }}>
+          <option value="all">All districts</option>
+          {districts.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
         <select value={ward} onChange={(e) => setWard(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid var(--border)' }}>
           <option value="all">All wards</option>
           {wards.map((w) => (
@@ -101,6 +136,37 @@ export function MembersTable({ members, readOnly = false }: MembersTableProps) {
           </div>
         )}
       </div>
+
+      {activeFilters > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '0.75rem',
+            fontSize: '0.82rem',
+            color: 'var(--muted)'
+          }}
+        >
+          <span>
+            Showing <strong style={{ color: 'var(--primary-dark)' }}>{filtered.length}</strong> of {members.length} centres
+          </span>
+          <button
+            onClick={clearAll}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border)',
+              borderRadius: 999,
+              padding: '0.2rem 0.7rem',
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              color: 'var(--primary-dark)'
+            }}
+          >
+            Clear filters ({activeFilters})
+          </button>
+        </div>
+      )}
 
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>

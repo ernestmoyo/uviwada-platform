@@ -35,9 +35,7 @@ export default async function AdminOverviewPage() {
             <span className="section-tag">{roleLabel}</span>
             <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{tenant.label_en}</h1>
             <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
-              {tenant.scope === 'national' ? 'National federation view' : 'Regional association view'}
-              {' · '}
-              {stats.total_members} members
+              {stats.total_members} members across {stats.by_ward.length} wards in {stats.by_district.length} districts
             </div>
           </div>
 
@@ -64,13 +62,23 @@ export default async function AdminOverviewPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
             <BigCard title={`Members by ward (${stats.by_ward.length})`}>
               {stats.by_ward.slice(0, 10).map((row) => (
-                <Row key={row.ward} label={row.ward} value={row.count} />
+                <DrillRow
+                  key={row.ward}
+                  label={row.ward}
+                  value={row.count}
+                  href={`/admin/members?ward=${encodeURIComponent(row.ward)}`}
+                />
               ))}
             </BigCard>
 
             <BigCard title={`Members by district (${stats.by_district.length})`}>
               {stats.by_district.map((row) => (
-                <Row key={row.district} label={row.district} value={row.count} />
+                <DrillRow
+                  key={row.district}
+                  label={row.district}
+                  value={row.count}
+                  href={`/admin/members?district=${encodeURIComponent(row.district)}`}
+                />
               ))}
             </BigCard>
 
@@ -110,12 +118,25 @@ function BigCard({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Row({ label, value }: { label: string; value: number }) {
+function DrillRow({ label, value, href }: { label: string; value: number; href: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+    <Link
+      href={href}
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '0.88rem',
+        padding: '0.25rem 0.4rem',
+        borderRadius: 6,
+        color: 'inherit',
+        transition: 'background 0.12s'
+      }}
+      className="drill-row"
+    >
       <span>{label}</span>
-      <strong style={{ color: 'var(--primary-dark)' }}>{value}</strong>
-    </div>
+      <strong style={{ color: 'var(--primary)' }}>{value} →</strong>
+    </Link>
   )
 }
 

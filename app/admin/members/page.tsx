@@ -10,7 +10,17 @@ import { getCurrentTenant } from '@/lib/tenant'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export default async function AdminMembersPage() {
+interface AdminMembersPageProps {
+  searchParams?: {
+    q?: string
+    ward?: string
+    district?: string
+    quality?: string
+    license?: string
+  }
+}
+
+export default async function AdminMembersPage({ searchParams }: AdminMembersPageProps) {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
   if (user.role === 'member') redirect('/portal')
@@ -18,6 +28,13 @@ export default async function AdminMembersPage() {
   const tenant = getCurrentTenant()
   const members = await fetchMembersForOrg(tenant.id)
   const readOnly = user.role === 'cic_staff'
+  const initialFilters = {
+    q: searchParams?.q,
+    ward: searchParams?.ward,
+    district: searchParams?.district,
+    quality: searchParams?.quality,
+    license: searchParams?.license
+  }
 
   return (
     <>
@@ -32,7 +49,7 @@ export default async function AdminMembersPage() {
             </p>
           </div>
 
-          <MembersTable members={members} readOnly={readOnly} />
+          <MembersTable members={members} readOnly={readOnly} initialFilters={initialFilters} />
         </div>
       </main>
     </>
