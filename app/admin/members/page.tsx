@@ -4,6 +4,7 @@ import { AdminNav } from '@/components/AdminNav'
 import { MembersTable } from '@/components/MembersTable'
 import { fetchMembersForOrg } from '@/lib/admin-data'
 import { getCurrentUser } from '@/lib/auth'
+import { isSupabaseConfigured } from '@/lib/supabase/server'
 import { getCurrentTenant } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
@@ -16,10 +17,11 @@ export default async function AdminMembersPage() {
 
   const tenant = getCurrentTenant()
   const members = await fetchMembersForOrg(tenant.id)
+  const readOnly = user.role === 'cic_staff'
 
   return (
     <>
-      <AdminNav fullName={user.full_name} role={user.role} currentTenantId={tenant.id} />
+      <AdminNav fullName={user.full_name} role={user.role} currentTenantId={tenant.id} demoMode={!isSupabaseConfigured()} />
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 110px)', padding: '2rem 0' }}>
         <div className="container">
           <div style={{ marginBottom: '1.5rem' }}>
@@ -30,7 +32,7 @@ export default async function AdminMembersPage() {
             </p>
           </div>
 
-          <MembersTable members={members} />
+          <MembersTable members={members} readOnly={readOnly} />
         </div>
       </main>
     </>

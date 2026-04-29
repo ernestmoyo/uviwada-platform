@@ -5,14 +5,16 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { useI18n } from '@/lib/i18n'
+import { DemoModeBanner } from './DemoModeBanner'
 
 interface PortalNavProps {
   fullName: string
   ward?: string | null
   role: string
+  demoMode?: boolean
 }
 
-export function PortalNav({ fullName, ward, role }: PortalNavProps) {
+export function PortalNav({ fullName, ward, role, demoMode = false }: PortalNavProps) {
   const { lang, toggle } = useI18n()
   const router = useRouter()
 
@@ -32,6 +34,7 @@ export function PortalNav({ fullName, ward, role }: PortalNavProps) {
         zIndex: 50
       }}
     >
+      <DemoModeBanner active={demoMode} />
       <div
         className="container"
         style={{

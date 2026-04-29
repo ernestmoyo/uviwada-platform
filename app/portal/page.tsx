@@ -8,6 +8,7 @@ import { TrafficLightCard } from '@/components/TrafficLightCard'
 import { TrainingsList } from '@/components/TrainingsList'
 import { getCurrentUser } from '@/lib/auth'
 import { fetchPortalSnapshot } from '@/lib/portal-data'
+import { isSupabaseConfigured } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,7 @@ export default async function PortalPage() {
 
   return (
     <>
-      <PortalNav fullName={user.full_name} ward={user.ward} role="Member" />
+      <PortalNav fullName={user.full_name} ward={user.ward} role="Member" demoMode={!isSupabaseConfigured()} />
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 60px)', padding: '2rem 0' }}>
         <div className="container">
           {!centre ? (

@@ -4,6 +4,7 @@ import { AdminNav } from '@/components/AdminNav'
 import { AssessmentForm } from '@/components/AssessmentForm'
 import { fetchAssessmentsForOrg, fetchMembersForOrg } from '@/lib/admin-data'
 import { getCurrentUser } from '@/lib/auth'
+import { isSupabaseConfigured } from '@/lib/supabase/server'
 import { getCurrentTenant } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,7 @@ export default async function AdminAssessmentsPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
   if (user.role === 'member') redirect('/portal')
+  if (user.role === 'cic_staff') redirect('/dashboard')
 
   const tenant = getCurrentTenant()
   const [members, assessments] = await Promise.all([
@@ -22,7 +24,7 @@ export default async function AdminAssessmentsPage() {
 
   return (
     <>
-      <AdminNav fullName={user.full_name} role={user.role} currentTenantId={tenant.id} />
+      <AdminNav fullName={user.full_name} role={user.role} currentTenantId={tenant.id} demoMode={!isSupabaseConfigured()} />
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 110px)', padding: '2rem 0' }}>
         <div className="container" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
           <div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 import { SEED_USER_PRESETS } from '@/lib/auth-presets'
@@ -9,33 +9,46 @@ interface MemberOption {
   id: string
   centre_name: string
   ward: string
+  district: string
 }
 
 interface LoginRoleSwitcherProps {
   memberOptions: MemberOption[]
+  tenantLabel: string
 }
 
-export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
+type LoginBody = { user_id: string } | { member_id: string }
+
+export function LoginRoleSwitcher({ memberOptions, tenantLabel }: LoginRoleSwitcherProps) {
   const { lang } = useI18n()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [hydrated, setHydrated] = useState(false)
+  const [pickedMemberId, setPickedMemberId] = useState<string>('')
 
-  // Disable buttons until React has hydrated to prevent the click-eats-itself
-  // race some users hit when arriving from /assess → /login redirect.
   useEffect(() => {
     setHydrated(true)
   }, [])
 
-  async function loginAs(userId: string) {
+  const groupedByWard = useMemo(() => {
+    const groups = new Map<string, MemberOption[]>()
+    memberOptions.forEach((m) => {
+      const list = groups.get(m.ward) ?? []
+      list.push(m)
+      groups.set(m.ward, list)
+    })
+    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b))
+  }, [memberOptions])
+
+  async function login(body: LoginBody, busyKey: string) {
     if (!hydrated || busyId) return
-    setBusyId(userId)
+    setBusyId(busyKey)
     setError(null)
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId })
+        body: JSON.stringify(body)
       })
       const json = (await res.json()) as { ok?: boolean; redirect?: string; error?: string }
       if (!res.ok || !json.ok || !json.redirect) {
@@ -43,9 +56,6 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
         setBusyId(null)
         return
       }
-      // Hard navigation guarantees the new session cookie ships on the
-      // very next request — softer router.push has occasionally raced with
-      // the cookie write on slow Vercel cold starts.
       window.location.assign(json.redirect)
     } catch {
       setError('Network error — please check your connection and try again.')
@@ -53,23 +63,33 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
     }
   }
 
+  function loginAsStaff(userId: string) {
+    return login({ user_id: userId }, userId)
+  }
+
+  function loginAsCentre() {
+    if (!pickedMemberId) {
+      setError(lang === 'sw' ? 'Tafadhali chagua kituo kwanza.' : 'Please pick a centre first.')
+      return
+    }
+    return login({ member_id: pickedMemberId }, `member:${pickedMemberId}`)
+  }
+
   return (
     <div className="portal-form-card" style={{ marginTop: '2rem' }}>
       <h3>{lang === 'sw' ? 'Chagua jukumu lako' : 'Pick your role'}</h3>
       <p className="form-note">
         {lang === 'sw'
-          ? 'Kwa demo hii, chagua mtumiaji ulioandaliwa tayari. Hakuna nenosiri.'
-          : 'For this demo, pick a pre-seeded user. No password required.'}
+          ? `Demo ya ${tenantLabel}. Hakuna nenosiri.`
+          : `${tenantLabel} demo. No password required.`}
       </p>
 
-      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {lang === 'sw' ? 'Wafanyakazi wa UVIWADA' : 'UVIWADA Staff'}
-      </h4>
+      <h4 style={sectionHeader}>{lang === 'sw' ? 'Wafanyakazi wa UVIWADA' : 'UVIWADA Staff'}</h4>
       <div style={{ display: 'grid', gap: '0.5rem' }}>
         {SEED_USER_PRESETS.map((u) => (
           <button
             key={u.id}
-            onClick={() => loginAs(u.id)}
+            onClick={() => loginAsStaff(u.id)}
             disabled={busyId !== null}
             className="btn"
             style={{
@@ -91,31 +111,65 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
 
       {memberOptions.length > 0 && (
         <>
-          <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {lang === 'sw' ? 'Wamiliki wa Vituo' : 'Centre Owners (Members)'}
+          <h4 style={sectionHeader}>
+            {lang === 'sw' ? 'Mmiliki wa Kituo' : 'Daycare Centre Owner'}
           </h4>
-          <div style={{ display: 'grid', gap: '0.5rem' }}>
-            {memberOptions.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => loginAs(m.id)}
-                disabled={busyId !== null}
-                className="btn"
-                style={{
-                  background: '#fff',
-                  color: 'var(--primary-dark)',
-                  border: '1px solid var(--border)',
-                  textAlign: 'left',
-                  padding: '0.75rem 1rem',
-                  cursor: busyId !== null ? 'wait' : 'pointer'
-                }}
-              >
-                <strong>{m.centre_name}</strong>
-                <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.15rem' }}>
-                  {m.ward} · member
-                </span>
-              </button>
-            ))}
+          <p className="form-note" style={{ marginTop: 0 }}>
+            {lang === 'sw'
+              ? `Chagua kituo kutoka kwenye orodha (${memberOptions.length} vituo).`
+              : `Pick a centre from the list (${memberOptions.length} centres registered).`}
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              gap: '0.5rem',
+              marginTop: '0.5rem'
+            }}
+          >
+            <select
+              value={pickedMemberId}
+              onChange={(e) => setPickedMemberId(e.target.value)}
+              disabled={busyId !== null}
+              style={{
+                padding: '0.7rem 0.85rem',
+                borderRadius: 8,
+                border: '1px solid var(--border)',
+                background: '#fff',
+                fontSize: '0.95rem',
+                color: 'var(--primary-dark)',
+                fontWeight: 500
+              }}
+              aria-label={lang === 'sw' ? 'Chagua kituo' : 'Choose centre'}
+            >
+              <option value="">
+                {lang === 'sw' ? '— Chagua kituo —' : '— Choose a centre —'}
+              </option>
+              {groupedByWard.map(([ward, centres]) => (
+                <optgroup key={ward} label={ward}>
+                  {centres.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.centre_name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <button
+              onClick={loginAsCentre}
+              disabled={busyId !== null || !pickedMemberId}
+              className="btn"
+              style={{
+                background: 'var(--primary)',
+                color: '#fff',
+                padding: '0.7rem 1.1rem',
+                fontWeight: 600,
+                cursor: busyId !== null || !pickedMemberId ? 'not-allowed' : 'pointer',
+                opacity: !pickedMemberId ? 0.55 : 1
+              }}
+            >
+              {lang === 'sw' ? 'Ingia →' : 'Sign in →'}
+            </button>
           </div>
           <p className="form-note" style={{ marginTop: '0.75rem', fontSize: '0.78rem' }}>
             {lang === 'sw'
@@ -130,4 +184,13 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
       )}
     </div>
   )
+}
+
+const sectionHeader: React.CSSProperties = {
+  marginTop: '1.5rem',
+  marginBottom: '0.5rem',
+  fontSize: '0.9rem',
+  color: 'var(--muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em'
 }

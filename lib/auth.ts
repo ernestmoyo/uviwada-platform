@@ -1,15 +1,15 @@
 import 'server-only'
 
 // Demo auth — pre-seeded role switcher. NO password / OTP / SMS round-trip.
-// Stores the chosen user's UUID in an httpOnly cookie. RLS still enforces
-// row visibility; we just bypass the auth handshake for the pitch.
-//
-// Production replacement: Supabase phone-OTP. Same cookie name, same shape;
-// only the issuance path changes.
+// Stores the chosen user's UUID in an httpOnly cookie. When Supabase env vars
+// are present, RLS still enforces row visibility; when they're absent, the
+// session resolves entirely from lib/demo-fallback so the demo can run with
+// no secrets.
 
 import { cookies } from 'next/headers'
 
-import { getSupabaseAdmin } from './supabase/server'
+import { getSupabaseAdmin, isSupabaseConfigured } from './supabase/server'
+import { getDemoUserById } from './demo-fallback'
 import type { DemoRole } from './auth-presets'
 
 export { SEED_USER_PRESETS, landingRouteForRole, type DemoRole } from './auth-presets'
@@ -33,8 +33,12 @@ export async function getCurrentUser(): Promise<DemoUser | null> {
   const userId = cookieStore.get(SESSION_COOKIE)?.value
   if (!userId) return null
 
+  if (!isSupabaseConfigured()) {
+    return getDemoUserById(userId)
+  }
+
   const supabase = getSupabaseAdmin()
-  if (!supabase) return null
+  if (!supabase) return getDemoUserById(userId)
 
   const { data, error } = await supabase
     .from('app_users')
@@ -42,6 +46,10 @@ export async function getCurrentUser(): Promise<DemoUser | null> {
     .eq('id', userId)
     .single()
 
-  if (error || !data) return null
+  if (error || !data) {
+    // Cookie may belong to a synthetic demo user even when Supabase is
+    // configured — fall back so the picker is forgiving across environments.
+    return getDemoUserById(userId)
+  }
   return data as DemoUser
 }

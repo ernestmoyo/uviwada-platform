@@ -5,27 +5,66 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import { useI18n } from '@/lib/i18n'
+import type { DemoRole } from '@/lib/auth-presets'
+import { DemoModeBanner } from './DemoModeBanner'
 import { TenantSwitcher } from './TenantSwitcher'
 
 interface AdminNavProps {
   fullName: string
-  role: string
+  role: DemoRole
   currentTenantId: string
+  demoMode?: boolean
 }
 
-export function AdminNav({ fullName, role, currentTenantId }: AdminNavProps) {
+interface NavLink {
+  href: string
+  sw: string
+  en: string
+}
+
+const ALL_LINKS = {
+  overview: { href: '/admin', sw: 'Dashibodi', en: 'Overview' },
+  members: { href: '/admin/members', sw: 'Wanachama', en: 'Members' },
+  trainings: { href: '/admin/trainings', sw: 'Mafunzo', en: 'Trainings' },
+  assessments: { href: '/admin/assessments', sw: 'Tathmini', en: 'Assessments' },
+  announcements: { href: '/admin/announcements', sw: 'Matangazo', en: 'Announcements' },
+  me: { href: '/dashboard', sw: 'M&E', en: 'M&E Dashboard' }
+} as const
+
+function linksForRole(role: DemoRole): NavLink[] {
+  switch (role) {
+    case 'admin':
+      return [
+        ALL_LINKS.overview,
+        ALL_LINKS.members,
+        ALL_LINKS.trainings,
+        ALL_LINKS.assessments,
+        ALL_LINKS.announcements,
+        ALL_LINKS.me
+      ]
+    case 'secretariat':
+      return [
+        ALL_LINKS.overview,
+        ALL_LINKS.members,
+        ALL_LINKS.trainings,
+        ALL_LINKS.assessments,
+        ALL_LINKS.announcements
+      ]
+    case 'cic_staff':
+      return [ALL_LINKS.me, ALL_LINKS.members]
+    case 'assessor':
+      return [ALL_LINKS.assessments, ALL_LINKS.members]
+    case 'member':
+      return []
+  }
+}
+
+export function AdminNav({ fullName, role, currentTenantId, demoMode = false }: AdminNavProps) {
   const { lang, toggle } = useI18n()
   const pathname = usePathname()
   const router = useRouter()
-
-  const links = [
-    { href: '/admin', sw: 'Dashibodi', en: 'Overview' },
-    { href: '/admin/members', sw: 'Wanachama', en: 'Members' },
-    { href: '/admin/trainings', sw: 'Mafunzo', en: 'Trainings' },
-    { href: '/admin/assessments', sw: 'Tathmini', en: 'Assessments' },
-    { href: '/admin/announcements', sw: 'Matangazo', en: 'Announcements' },
-    { href: '/dashboard', sw: 'M&E', en: 'M&E Dashboard' }
-  ]
+  const links = linksForRole(role)
+  const showTenantSwitcher = role === 'admin'
 
   async function logout() {
     await fetch('/api/auth/login', { method: 'DELETE' })
@@ -43,6 +82,7 @@ export function AdminNav({ fullName, role, currentTenantId }: AdminNavProps) {
         zIndex: 50
       }}
     >
+      <DemoModeBanner active={demoMode} />
       <div
         className="container"
         style={{
@@ -57,7 +97,26 @@ export function AdminNav({ fullName, role, currentTenantId }: AdminNavProps) {
           <Image src="/logo.svg" alt="UVIWADA" width={120} height={36} style={{ height: 32, width: 'auto' }} />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <TenantSwitcher currentTenantId={currentTenantId} />
+          {showTenantSwitcher && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <TenantSwitcher currentTenantId={currentTenantId} />
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  color: 'var(--muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                title={
+                  lang === 'sw'
+                    ? 'Onyesho la upanuzi: UVIWATA na matawi ya kikanda (Awamu ya 2)'
+                    : 'Scalability preview: UVIWATA + regional branches (Phase 2)'
+                }
+              >
+                {lang === 'sw' ? 'Awamu 2' : 'Phase 2'}
+              </span>
+            </div>
+          )}
           <button
             onClick={toggle}
             style={{

@@ -23,8 +23,31 @@ export function NavBar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [activeId, setActiveId] = useState<string>('home')
+  const [landingPath, setLandingPath] = useState<string | null>(null)
 
   const isHome = pathname === '/'
+
+  // Detect an existing session so the trailing button can deep-link the user
+  // back to their dashboard instead of forcing them through /login again.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json: { signedIn?: boolean; landingPath?: string } | null) => {
+        if (cancelled) return
+        if (json?.signedIn && json.landingPath) {
+          setLandingPath(json.landingPath)
+        } else {
+          setLandingPath(null)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLandingPath(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [pathname])
 
   // On the homepage we use bare hash anchors so the browser smooth-scrolls.
   // On any other route we use `/#section` so Next.js navigates back home
@@ -79,9 +102,15 @@ export function NavBar() {
             </li>
           ))}
           <li>
-            <Link href="/login" className="btn-nav" onClick={() => setOpen(false)}>
-              {lang === 'sw' ? 'Ingia Portalini' : 'Sign in'}
-            </Link>
+            {landingPath ? (
+              <Link href={landingPath} className="btn-nav" onClick={() => setOpen(false)}>
+                {lang === 'sw' ? 'Fungua Dashibodi' : 'Open dashboard'}
+              </Link>
+            ) : (
+              <Link href="/login" className="btn-nav" onClick={() => setOpen(false)}>
+                {lang === 'sw' ? 'Ingia Portalini' : 'Sign in'}
+              </Link>
+            )}
           </li>
         </ul>
       </div>

@@ -1,4 +1,10 @@
-import { getSupabaseAdmin } from './supabase/server'
+import { getSupabaseAdmin, isSupabaseConfigured } from './supabase/server'
+import {
+  buildDemoTenantStats,
+  DEMO_ANNOUNCEMENTS,
+  DEMO_TRAININGS,
+  listDemoMembersForOrg
+} from './demo-fallback'
 import type { LicenseStatus, QualityRating } from './types/database'
 
 export interface AdminMember {
@@ -82,8 +88,9 @@ interface MemberRow {
 }
 
 export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> {
+  if (!isSupabaseConfigured()) return listDemoMembersForOrg(orgId)
   const supabase = getSupabaseAdmin()
-  if (!supabase) return []
+  if (!supabase) return listDemoMembersForOrg(orgId)
   try {
     const { data } = await supabase
       .from('members')
@@ -92,15 +99,18 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
       )
       .eq('org_id', orgId)
       .order('centre_name')
-    return (data ?? []) as MemberRow[]
+    const rows = (data ?? []) as MemberRow[]
+    if (rows.length === 0) return listDemoMembersForOrg(orgId)
+    return rows
   } catch {
-    return []
+    return listDemoMembersForOrg(orgId)
   }
 }
 
 export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining[]> {
+  if (!isSupabaseConfigured()) return DEMO_TRAININGS
   const supabase = getSupabaseAdmin()
-  if (!supabase) return []
+  if (!supabase) return DEMO_TRAININGS
   try {
     const { data: trainings } = await supabase
       .from('trainings')
@@ -109,7 +119,7 @@ export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining
       .order('scheduled_at', { ascending: false })
 
     const trs = (trainings ?? []) as Array<Omit<AdminTraining, 'registered_count'>>
-    if (trs.length === 0) return []
+    if (trs.length === 0) return DEMO_TRAININGS
 
     const ids = trs.map((t) => t.id)
     const { data: regs } = await supabase
@@ -123,11 +133,12 @@ export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining
 
     return trs.map((t) => ({ ...t, registered_count: counts.get(t.id) ?? 0 }))
   } catch {
-    return []
+    return DEMO_TRAININGS
   }
 }
 
 export async function fetchAssessmentsForOrg(orgId: string, limit = 50): Promise<AdminAssessment[]> {
+  if (!isSupabaseConfigured()) return []
   const supabase = getSupabaseAdmin()
   if (!supabase) return []
   try {
@@ -172,38 +183,26 @@ export async function fetchAssessmentsForOrg(orgId: string, limit = 50): Promise
 }
 
 export async function fetchAnnouncementsForOrg(orgId: string): Promise<AdminAnnouncement[]> {
+  if (!isSupabaseConfigured()) return DEMO_ANNOUNCEMENTS
   const supabase = getSupabaseAdmin()
-  if (!supabase) return []
+  if (!supabase) return DEMO_ANNOUNCEMENTS
   try {
     const { data } = await supabase
       .from('announcements')
       .select('id, title_sw, title_en, body_sw, body_en, published_at')
       .eq('org_id', orgId)
       .order('published_at', { ascending: false })
-    return (data ?? []) as AdminAnnouncement[]
+    const rows = (data ?? []) as AdminAnnouncement[]
+    return rows.length > 0 ? rows : DEMO_ANNOUNCEMENTS
   } catch {
-    return []
+    return DEMO_ANNOUNCEMENTS
   }
 }
 
 export async function fetchTenantStats(orgId: string): Promise<AdminTenantStats> {
+  if (!isSupabaseConfigured()) return buildDemoTenantStats(orgId)
   const supabase = getSupabaseAdmin()
-  const empty: AdminTenantStats = {
-    total_members: 0,
-    active_centres: 0,
-    pct_green: 0,
-    pct_amber: 0,
-    pct_red: 0,
-    trainings_upcoming: 0,
-    trainings_attended: 0,
-    expired_licences: 0,
-    expiring_30d: 0,
-    total_children: 0,
-    by_ward: [],
-    by_district: [],
-    membership_growth: { labels: [], data: [] }
-  }
-  if (!supabase) return empty
+  if (!supabase) return buildDemoTenantStats(orgId)
   try {
     const { data: memberRows } = await supabase
       .from('members')
@@ -220,7 +219,7 @@ export async function fetchTenantStats(orgId: string): Promise<AdminTenantStats>
       joined_at: string
     }>
 
-    if (members.length === 0) return empty
+    if (members.length === 0) return buildDemoTenantStats(orgId)
 
     const total = members.length
     const counts = { green: 0, amber: 0, red: 0 }
@@ -299,7 +298,7 @@ export async function fetchTenantStats(orgId: string): Promise<AdminTenantStats>
       membership_growth: { labels, data: series }
     }
   } catch {
-    return empty
+    return buildDemoTenantStats(orgId)
   }
 }
 

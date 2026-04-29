@@ -1,4 +1,5 @@
-import { getSupabaseAdmin } from './supabase/server'
+import { getSupabaseAdmin, isSupabaseConfigured } from './supabase/server'
+import { buildDemoPortalSnapshot } from './demo-fallback'
 import type { QualityRating, QualityDimension } from './types/database'
 
 export interface MyCentre {
@@ -67,10 +68,9 @@ const DIMENSION_LABELS: Record<QualityDimension, { sw: string; en: string }> = {
 }
 
 export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnapshot> {
+  if (!isSupabaseConfigured()) return buildDemoPortalSnapshot(memberId)
   const supabase = getSupabaseAdmin()
-  if (!supabase) {
-    return { centre: null, upcoming: [], announcements: [], recommended: [], weakDimensions: [] }
-  }
+  if (!supabase) return buildDemoPortalSnapshot(memberId)
 
   const { data: centreRow } = await supabase
     .from('members')
@@ -80,6 +80,7 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
     .eq('id', memberId)
     .single()
 
+  if (!centreRow) return buildDemoPortalSnapshot(memberId)
   const centre = (centreRow as MyCentre & { org_id?: string }) ?? null
   const orgId = (centreRow as { org_id?: string } | null)?.org_id
 

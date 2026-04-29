@@ -7,12 +7,13 @@ import type { LicenseStatus, QualityRating } from '@/lib/types/database'
 
 interface MembersTableProps {
   members: AdminMember[]
+  readOnly?: boolean
 }
 
 const QUALITY_OPTIONS: Array<QualityRating | 'all'> = ['all', 'green', 'amber', 'red']
 const LICENSE_OPTIONS: Array<LicenseStatus | 'all'> = ['all', 'fully_licensed', 'pending', 'not_applied', 'expired']
 
-export function MembersTable({ members }: MembersTableProps) {
+export function MembersTable({ members, readOnly = false }: MembersTableProps) {
   const [search, setSearch] = useState('')
   const [ward, setWard] = useState('all')
   const [quality, setQuality] = useState<string>('all')
@@ -77,13 +78,28 @@ export function MembersTable({ members }: MembersTableProps) {
             </option>
           ))}
         </select>
-        <button
-          onClick={exportCsv}
-          className="btn"
-          style={{ background: 'var(--primary)', color: '#fff', padding: '0.5rem 0.85rem', fontSize: '0.85rem' }}
-        >
-          Export CSV ({filtered.length})
-        </button>
+        {!readOnly && (
+          <button
+            onClick={exportCsv}
+            className="btn"
+            style={{ background: 'var(--primary)', color: '#fff', padding: '0.5rem 0.85rem', fontSize: '0.85rem' }}
+          >
+            Export CSV ({filtered.length})
+          </button>
+        )}
+        {readOnly && (
+          <div
+            style={{
+              alignSelf: 'center',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              color: 'var(--muted)',
+              textAlign: 'right'
+            }}
+          >
+            Read-only · {filtered.length} centres
+          </div>
+        )}
       </div>
 
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
