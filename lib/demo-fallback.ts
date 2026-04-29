@@ -146,6 +146,23 @@ export function listDemoMemberOptions(orgId: string): DemoMemberOption[] {
   })
 }
 
+// Used by the public login page — must list every centre regardless of the
+// admin's current tenant selection so a centre owner can always find their
+// own daycare. The fallback only knows about the 24 UVIWADA-DAR seed
+// centres; the live Supabase path returns all 35 across the three orgs.
+export function listAllDemoMemberOptions(): Array<DemoMemberOption & { org_id: string }> {
+  return DEMO_CENTRES.map((c) => ({
+    id: c.id,
+    centre_name: c.centre_name,
+    ward: c.ward,
+    district: c.district,
+    org_id: c.org_id
+  })).sort((a, b) => {
+    if (a.ward !== b.ward) return a.ward.localeCompare(b.ward)
+    return a.centre_name.localeCompare(b.centre_name)
+  })
+}
+
 // Trainings — three upcoming + three completed-style entries based on SIX_TRAININGS.
 function buildDemoTrainings(): AdminTraining[] {
   const now = Date.now()

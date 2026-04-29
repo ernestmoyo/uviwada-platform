@@ -4,22 +4,29 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 import { SEED_USER_PRESETS } from '@/lib/auth-presets'
+import { TENANT_PRESETS } from '@/lib/tenant-presets'
 
 interface MemberOption {
   id: string
   centre_name: string
   ward: string
   district: string
+  org_id: string
 }
 
 interface LoginRoleSwitcherProps {
   memberOptions: MemberOption[]
-  tenantLabel: string
 }
 
 type LoginBody = { user_id: string } | { member_id: string }
 
-export function LoginRoleSwitcher({ memberOptions, tenantLabel }: LoginRoleSwitcherProps) {
+interface TenantGroup {
+  org_id: string
+  label: string
+  centres: MemberOption[]
+}
+
+export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
   const { lang } = useI18n()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -30,15 +37,29 @@ export function LoginRoleSwitcher({ memberOptions, tenantLabel }: LoginRoleSwitc
     setHydrated(true)
   }, [])
 
-  const groupedByWard = useMemo(() => {
-    const groups = new Map<string, MemberOption[]>()
+  const groupedByTenant = useMemo<TenantGroup[]>(() => {
+    const groups = new Map<string, TenantGroup>()
     memberOptions.forEach((m) => {
-      const list = groups.get(m.ward) ?? []
-      list.push(m)
-      groups.set(m.ward, list)
+      const tenant = TENANT_PRESETS.find((t) => t.id === m.org_id)
+      const label = tenant ? (lang === 'sw' ? tenant.label_sw : tenant.label_en) : 'Other'
+      const existing = groups.get(m.org_id)
+      if (existing) {
+        existing.centres.push(m)
+      } else {
+        groups.set(m.org_id, { org_id: m.org_id, label, centres: [m] })
+      }
     })
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b))
-  }, [memberOptions])
+    // Stable order: UVIWADA-DAR first (the live region), then siblings alpha.
+    return Array.from(groups.values())
+      .map((g) => ({
+        ...g,
+        centres: [...g.centres].sort((a, b) => {
+          if (a.ward !== b.ward) return a.ward.localeCompare(b.ward)
+          return a.centre_name.localeCompare(b.centre_name)
+        })
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+  }, [memberOptions, lang])
 
   async function login(body: LoginBody, busyKey: string) {
     if (!hydrated || busyId) return
@@ -80,8 +101,8 @@ export function LoginRoleSwitcher({ memberOptions, tenantLabel }: LoginRoleSwitc
       <h3>{lang === 'sw' ? 'Chagua jukumu lako' : 'Pick your role'}</h3>
       <p className="form-note">
         {lang === 'sw'
-          ? `Demo ya ${tenantLabel}. Hakuna nenosiri.`
-          : `${tenantLabel} demo. No password required.`}
+          ? 'Demo ya UVIWADA. Hakuna nenosiri.'
+          : 'UVIWADA demo. No password required.'}
       </p>
 
       <h4 style={sectionHeader}>{lang === 'sw' ? 'Wafanyakazi wa UVIWADA' : 'UVIWADA Staff'}</h4>
@@ -145,11 +166,11 @@ export function LoginRoleSwitcher({ memberOptions, tenantLabel }: LoginRoleSwitc
               <option value="">
                 {lang === 'sw' ? '— Chagua kituo —' : '— Choose a centre —'}
               </option>
-              {groupedByWard.map(([ward, centres]) => (
-                <optgroup key={ward} label={ward}>
-                  {centres.map((m) => (
+              {groupedByTenant.map((group) => (
+                <optgroup key={group.org_id} label={group.label}>
+                  {group.centres.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.centre_name}
+                      {m.ward} · {m.centre_name}
                     </option>
                   ))}
                 </optgroup>

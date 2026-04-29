@@ -97,26 +97,7 @@ export function AdminNav({ fullName, role, currentTenantId, demoMode = false }: 
           <Image src="/logo.svg" alt="UVIWADA" width={120} height={36} style={{ height: 32, width: 'auto' }} />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {showTenantSwitcher && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <TenantSwitcher currentTenantId={currentTenantId} />
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  color: 'var(--muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-                title={
-                  lang === 'sw'
-                    ? 'Onyesho la upanuzi: UVIWATA na matawi ya kikanda (Awamu ya 2)'
-                    : 'Scalability preview: UVIWATA + regional branches (Phase 2)'
-                }
-              >
-                {lang === 'sw' ? 'Awamu 2' : 'Phase 2'}
-              </span>
-            </div>
-          )}
+          {showTenantSwitcher && <TenantSwitcher currentTenantId={currentTenantId} />}
           <button
             onClick={toggle}
             style={{
