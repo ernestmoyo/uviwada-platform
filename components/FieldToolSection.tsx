@@ -3,10 +3,15 @@
 import Link from 'next/link'
 
 import { useI18n } from '@/lib/i18n'
+import { canSeeFieldApp, useSession } from '@/lib/use-session'
 import { InstallPrompt } from './InstallPrompt'
 
 export function FieldToolSection() {
   const { lang } = useI18n()
+  const { role } = useSession()
+  // Field App is the assessor's offline tool; only assessors and admins
+  // (universal access) should see this section on the public homepage.
+  if (!canSeeFieldApp(role)) return null
   return (
     <section className="section section-alt" id="field-app">
       <div className="container">

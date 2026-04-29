@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
+import { canSeeFieldApp, useSession } from '@/lib/use-session'
 
 const NAV_ITEMS = [
   { id: 'home', sw: 'Nyumbani', en: 'Home' },
@@ -20,11 +21,14 @@ const NAV_ITEMS = [
 export function NavBar() {
   const { lang } = useI18n()
   const pathname = usePathname()
+  const { role } = useSession()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [activeId, setActiveId] = useState<string>('home')
 
   const isHome = pathname === '/'
+  const showFieldApp = canSeeFieldApp(role)
+  const visibleNavItems = NAV_ITEMS.filter((item) => item.id !== 'field-app' || showFieldApp)
 
   // On the homepage we use bare hash anchors so the browser smooth-scrolls.
   // On any other route we use `/#section` so Next.js navigates back home
@@ -67,7 +71,7 @@ export function NavBar() {
           <span />
         </button>
         <ul className={`nav-links ${open ? 'open' : ''}`}>
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <li key={item.id}>
               <Link
                 href={sectionHref(item.id)}
