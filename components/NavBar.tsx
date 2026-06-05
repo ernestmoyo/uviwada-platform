@@ -83,6 +83,11 @@ export function NavBar() {
             </li>
           ))}
           <li>
+            <Link href="/quality" className={pathname === '/quality' ? 'active' : ''} onClick={() => setOpen(false)}>
+              {lang === 'sw' ? 'Ubora' : 'Quality'}
+            </Link>
+          </li>
+          <li>
             <Link href="/login" className="btn-nav" onClick={() => setOpen(false)}>
               {lang === 'sw' ? 'Ingia Portalini' : 'Sign in'}
             </Link>

@@ -39,6 +39,13 @@ export default async function MEDashboardPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <a
+                href={`/quality`}
+                className="btn"
+                style={{ background: 'var(--primary-dark, #0B2545)', color: '#fff', padding: '0.45rem 0.95rem', fontSize: '0.85rem' }}
+              >
+                Quality rubric results →
+              </a>
+              <a
                 href={`/api/members/export`}
                 className="btn"
                 style={{ background: 'var(--primary)', color: '#fff', padding: '0.45rem 0.95rem', fontSize: '0.85rem' }}

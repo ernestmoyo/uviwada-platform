@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { AssessmentForm } from '@/components/AssessmentForm'
+import { RubricAssessmentForm } from '@/components/RubricAssessmentForm'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { PortalNav } from '@/components/PortalNav'
@@ -40,9 +40,8 @@ export default async function AssessPage() {
             <InstallPrompt compact />
           </div>
 
-          <AssessmentForm
+          <RubricAssessmentForm
             members={assignedMembers.map((m) => ({ id: m.id, centre_name: m.centre_name, ward: m.ward }))}
-            variant="field"
           />
         </div>
       </main>
