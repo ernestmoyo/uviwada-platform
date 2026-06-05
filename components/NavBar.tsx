@@ -63,7 +63,7 @@ export function NavBar() {
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} id="navbar">
       <div className="container nav-inner">
         <Link href="/" className="logo" onClick={() => setOpen(false)}>
-          <Image src="/logo.svg" alt="UVIWADA - Mtoto Kwanza" width={140} height={44} className="logo-img" priority />
+          <Image src="/uviwata_logo.png" alt="UVIWATA - Mtoto Kwanza" width={178} height={100} className="logo-img" style={{ height: 46, width: 'auto' }} priority />
         </Link>
         <button className="menu-btn" onClick={() => setOpen((v) => !v)} aria-label="Menu">
           <span />

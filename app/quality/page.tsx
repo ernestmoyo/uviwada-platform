@@ -18,7 +18,12 @@ export default async function QualityPage() {
     <main style={{ background: 'var(--bg-alt)', minHeight: '100vh' }}>
       <header style={{ background: 'var(--primary-dark, #0B2545)', color: '#fff', padding: '1.4rem 0' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span style={{ background: '#fff', borderRadius: 10, padding: '0.5rem 0.7rem', display: 'inline-flex' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/uviwata_logo.png" alt="UVIWATA — Mtoto Kwanza" style={{ height: 40, width: 'auto', display: 'block' }} />
+            </span>
+            <div>
             <div style={{ fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.75 }}>
               UVIWATA · Daycare Quality
             </div>
@@ -26,6 +31,7 @@ export default async function QualityPage() {
             <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', opacity: 0.85 }}>
               {snapshot.meta.totalRecords} day care centres assessed on the national quality rubric. Explore by council, ownership and tier.
             </p>
+            </div>
           </div>
           <Link href="/" style={{ color: '#fff', fontSize: '0.85rem', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)', padding: '0.45rem 0.9rem', borderRadius: 8 }}>
             ← Home
