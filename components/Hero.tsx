@@ -6,11 +6,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/lib/i18n'
 
 interface HeroProps {
-  totalMembers: number
-  childrenReached: number
+  centres: number
+  councils: number
+  children: number
 }
 
-export function Hero({ totalMembers, childrenReached }: HeroProps) {
+export function Hero({ centres, councils, children }: HeroProps) {
   const { lang } = useI18n()
   const statsRef = useRef<HTMLDivElement | null>(null)
   // Animated values live in React state so re-renders (e.g. language toggle)
@@ -26,7 +27,7 @@ export function Hero({ totalMembers, childrenReached }: HeroProps) {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !animatedRef.current) {
             animatedRef.current = true
-            animate(totalMembers, 5, childrenReached, setCounts)
+            animate(centres, councils, children, setCounts)
             observer.unobserve(entry.target)
           }
         })
@@ -35,7 +36,7 @@ export function Hero({ totalMembers, childrenReached }: HeroProps) {
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [totalMembers, childrenReached])
+  }, [centres, councils, children])
 
   // If the section is already in view on first paint (e.g. very tall viewport
   // or hard refresh) the IO won't fire — kick the animator after a tick.
@@ -46,12 +47,12 @@ export function Hero({ totalMembers, childrenReached }: HeroProps) {
         const rect = statsRef.current.getBoundingClientRect()
         if (rect.top < window.innerHeight) {
           animatedRef.current = true
-          animate(totalMembers, 5, childrenReached, setCounts)
+          animate(centres, councils, children, setCounts)
         }
       }
     }, 600)
     return () => window.clearTimeout(t)
-  }, [totalMembers, childrenReached])
+  }, [centres, councils, children])
 
   return (
     <section className="hero" id="home">
@@ -81,27 +82,26 @@ export function Hero({ totalMembers, childrenReached }: HeroProps) {
             : "UVIWADA's digital platform connects, supports and elevates the quality of daycare centres in high-density, low-income areas."}
         </p>
         <div className="hero-actions">
-          <a href="#services" className="btn btn-primary">
-            {lang === 'sw' ? 'Huduma Zetu' : 'Our Services'}
+          <a href="#map" className="btn btn-primary">
+            {lang === 'sw' ? 'Tafuta Kituo Karibu Nawe' : 'Find a Daycare Near You'}
           </a>
           <Link href="/portal/register" className="btn btn-outline">
-            {lang === 'sw' ? 'Jiunge Sasa' : 'Join Now'}
+            {lang === 'sw' ? 'Jiunge na UVIWATA' : 'Join UVIWATA'}
           </Link>
         </div>
         <div className="hero-stats" ref={statsRef}>
           <div className="stat">
             <span className="stat-num">{counts.members.toLocaleString()}</span>
-            <span>+</span>
-            <span className="stat-label">{lang === 'sw' ? 'Vituo vya Wanachama' : 'Member Centres'}</span>
+            <span className="stat-label">{lang === 'sw' ? 'Vituo Vilivyotathminiwa' : 'Centres Assessed'}</span>
           </div>
           <div className="stat">
             <span className="stat-num">{counts.districts}</span>
-            <span className="stat-label">{lang === 'sw' ? 'Wilaya za Dar' : 'Dar Districts'}</span>
+            <span className="stat-label">{lang === 'sw' ? 'Halmashauri' : 'Councils'}</span>
           </div>
           <div className="stat">
             <span className="stat-num">{counts.children.toLocaleString()}</span>
             <span>+</span>
-            <span className="stat-label">{lang === 'sw' ? 'Watoto Wanaofaidika' : 'Children Reached'}</span>
+            <span className="stat-label">{lang === 'sw' ? 'Watoto Wanaohudumiwa' : 'Children Served'}</span>
           </div>
         </div>
       </div>
