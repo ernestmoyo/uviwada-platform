@@ -83,6 +83,11 @@ export function NavBar() {
             </li>
           ))}
           <li>
+            <Link href="/directory" className={pathname === '/directory' ? 'active' : ''} onClick={() => setOpen(false)}>
+              {lang === 'sw' ? 'Tafuta Kituo' : 'Find a Daycare'}
+            </Link>
+          </li>
+          <li>
             <Link href="/quality" className={pathname === '/quality' ? 'active' : ''} onClick={() => setOpen(false)}>
               {lang === 'sw' ? 'Ubora' : 'Quality'}
             </Link>

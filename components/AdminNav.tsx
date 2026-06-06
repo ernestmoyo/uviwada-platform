@@ -28,6 +28,7 @@ const ALL_LINKS = {
   trainings: { href: '/admin/trainings', sw: 'Mafunzo', en: 'Trainings' },
   assessments: { href: '/admin/assessments', sw: 'Tathmini', en: 'Assessments' },
   announcements: { href: '/admin/announcements', sw: 'Matangazo', en: 'Announcements' },
+  certificates: { href: '/admin/certificates', sw: 'Vyeti', en: 'Certificates' },
   me: { href: '/dashboard', sw: 'M&E', en: 'M&E Dashboard' }
 } as const
 
@@ -40,6 +41,7 @@ function linksForRole(role: DemoRole): NavLink[] {
         ALL_LINKS.trainings,
         ALL_LINKS.assessments,
         ALL_LINKS.announcements,
+        ALL_LINKS.certificates,
         ALL_LINKS.me
       ]
     case 'secretariat':
@@ -48,7 +50,8 @@ function linksForRole(role: DemoRole): NavLink[] {
         ALL_LINKS.members,
         ALL_LINKS.trainings,
         ALL_LINKS.assessments,
-        ALL_LINKS.announcements
+        ALL_LINKS.announcements,
+        ALL_LINKS.certificates
       ]
     case 'cic_staff':
       return [ALL_LINKS.me, ALL_LINKS.members]

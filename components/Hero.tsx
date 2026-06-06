@@ -82,9 +82,9 @@ export function Hero({ centres, councils, children }: HeroProps) {
             : "UVIWADA's digital platform connects, supports and elevates the quality of daycare centres in high-density, low-income areas."}
         </p>
         <div className="hero-actions">
-          <a href="#map" className="btn btn-primary">
+          <Link href="/directory" className="btn btn-primary">
             {lang === 'sw' ? 'Tafuta Kituo Karibu Nawe' : 'Find a Daycare Near You'}
-          </a>
+          </Link>
           <Link href="/portal/register" className="btn btn-outline">
             {lang === 'sw' ? 'Jiunge na UVIWATA' : 'Join UVIWATA'}
           </Link>

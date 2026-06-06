@@ -41,12 +41,17 @@ export default async function PortalPage() {
             </div>
           ) : (
             <>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <span className="section-tag">My Centre · Kituo Changu</span>
-                <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{centre.centre_name}</h1>
-                <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
-                  {centre.ward} · {centre.district} · joined {new Date(centre.joined_at).toLocaleDateString()}
+              <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <div>
+                  <span className="section-tag">My Centre · Kituo Changu</span>
+                  <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{centre.centre_name}</h1>
+                  <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
+                    {centre.ward} · {centre.district} · joined {new Date(centre.joined_at).toLocaleDateString()}
+                  </div>
                 </div>
+                <Link href="/portal/membership" className="btn btn-primary">
+                  Membership & Certificate →
+                </Link>
               </div>
 
               <div
