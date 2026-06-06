@@ -1,5 +1,5 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from './supabase/server'
-import { FALLBACK_DASHBOARD, SEED_CENTRES, type SeedCentre } from './seed-data'
+import { SEED_CENTRES, type SeedCentre } from './seed-data'
 import type { QualityRating } from './types/database'
 
 export interface PublicCentre {
@@ -11,15 +11,6 @@ export interface PublicCentre {
   lng: number
   quality: QualityRating
   children: number
-}
-
-export interface DashboardSnapshot {
-  totalMembers: number
-  activeCentres: number
-  avgQualityPct: number
-  trainingsCompleted: number
-  qualityDistribution: { green: number; amber: number; red: number }
-  membershipGrowth: { labels: string[]; data: number[] }
 }
 
 function seedToPublic(s: SeedCentre, idx: number): PublicCentre {
@@ -81,63 +72,3 @@ export async function fetchPublicCentres(): Promise<PublicCentre[]> {
   }
 }
 
-export async function fetchDashboardSnapshot(): Promise<DashboardSnapshot> {
-  if (!isSupabaseConfigured()) return FALLBACK_DASHBOARD.uviwada
-  const supabase = getSupabaseAdmin()
-  if (!supabase) return FALLBACK_DASHBOARD.uviwada
-
-  try {
-    type MemberRow = {
-      id: string
-      latest_quality: string | null
-      license_status: string
-      children_count: number
-      joined_at: string
-    }
-
-    const { data } = await supabase
-      .from('members')
-      .select('id, latest_quality, license_status, children_count, joined_at')
-
-    const members = (data ?? []) as MemberRow[]
-    if (members.length === 0) return FALLBACK_DASHBOARD.uviwada
-
-    const counts = { green: 0, amber: 0, red: 0 }
-    for (const m of members) {
-      const q = (m.latest_quality ?? 'amber') as QualityRating
-      counts[q] += 1
-    }
-
-    const totalMembers = members.length
-    const activeCentres = members.filter((m) => m.license_status !== 'expired').length
-    const greenPct = totalMembers > 0 ? Math.round((counts.green / totalMembers) * 100) : 0
-
-    const labels: string[] = []
-    const series: number[] = []
-    const now = new Date()
-    for (let i = 8; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const next = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
-      labels.push(d.toLocaleString('en', { month: 'short' }))
-      const cumulative = members.filter((m) => new Date(m.joined_at) < next).length
-      series.push(cumulative)
-    }
-
-    const { count: trainingsCompleted } = await supabase
-      .from('training_registrations')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'attended')
-
-    return {
-      totalMembers,
-      activeCentres,
-      avgQualityPct: greenPct,
-      trainingsCompleted: trainingsCompleted ?? 0,
-      qualityDistribution: counts,
-      membershipGrowth: { labels, data: series }
-    }
-  } catch (err) {
-    console.error('fetchDashboardSnapshot: falling back to seed', err)
-    return FALLBACK_DASHBOARD.uviwada
-  }
-}

@@ -8,6 +8,7 @@ import { ImpactCase } from '@/components/ImpactCase'
 import { MapSection } from '@/components/MapSection'
 import { NavBar } from '@/components/NavBar'
 import { PortalCta } from '@/components/PortalCta'
+import { RegionalStructure } from '@/components/RegionalStructure'
 import { Services } from '@/components/Services'
 import { OurApproach } from '@/components/OurApproach'
 import { TopBar } from '@/components/TopBar'
@@ -37,6 +38,7 @@ export default async function HomePage() {
         <About />
         <OurApproach />
         <WhyJoin />
+        <RegionalStructure centres={kpis.centres} councils={kpis.councils} children={kpis.children} />
         <Services />
         <Dashboard centres={rubric.centres} meta={rubric.meta} source={rubric.source} />
         <ImpactCase />

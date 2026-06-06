@@ -360,7 +360,7 @@ export function buildDemoTenantStats(orgId: string): AdminTenantStats {
     pct_amber: Math.round((counts.amber / total) * 100),
     pct_red: Math.round((counts.red / total) * 100),
     trainings_upcoming: upcoming,
-    trainings_attended: 18,
+    trainings_attended: DEMO_TRAININGS.filter((t) => t.scheduled_at < new Date().toISOString()).length,
     expired_licences: expired,
     expiring_30d: expiring30,
     total_children: totalChildren,

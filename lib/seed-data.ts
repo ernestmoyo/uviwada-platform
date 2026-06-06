@@ -82,30 +82,3 @@ export const SIX_TRAININGS = [
   { category: 'staffing', title_sw: 'Ushirikiano na Wazazi', title_en: 'Parent Engagement' }
 ] as const
 
-export const FALLBACK_DASHBOARD = {
-  uviwada: {
-    totalMembers: 147,
-    activeCentres: 132,
-    avgQualityPct: 68,
-    trainingsCompleted: 24,
-    qualityDistribution: { green: 67, amber: 23, red: 10 },
-    membershipGrowth: {
-      labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-      data: [82, 89, 95, 104, 112, 118, 128, 139, 147]
-    }
-  },
-  cic: {
-    nmecdpTracked: '12/15',
-    centresImproved: 67,
-    childrenImpacted: 2840,
-    donorReports: 4,
-    indicators: [
-      { label_sw: 'Ufikiaji wa watoto chini ya 6', label_en: 'Access for children under 6', status: 'green' as QualityRating, value: '78%' },
-      { label_sw: 'Watoa huduma waliofunzwa', label_en: 'Trained caregivers', status: 'green' as QualityRating, value: '82%' },
-      { label_sw: 'Vituo vyenye leseni', label_en: 'Licensed centres', status: 'amber' as QualityRating, value: '54%' },
-      { label_sw: 'Uwiano wa mtoto-mlezi', label_en: 'Child-caregiver ratio', status: 'green' as QualityRating, value: '1:12' },
-      { label_sw: 'Miundombinu ya WASH', label_en: 'WASH infrastructure', status: 'red' as QualityRating, value: '38%' },
-      { label_sw: 'Lishe na afya', label_en: 'Nutrition & health', status: 'amber' as QualityRating, value: '61%' }
-    ]
-  }
-}

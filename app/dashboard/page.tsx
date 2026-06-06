@@ -34,7 +34,7 @@ export default async function MEDashboardPage() {
                 Programme Performance — {stats.total_members} centres tracked
               </h1>
               <p style={{ color: 'var(--muted)', fontSize: '0.85rem', margin: 0 }}>
-                Indicators map to Tanzania&apos;s NMECDP framework (alignment to be confirmed during inception).
+                Preliminary — figures from the 234-centre rubric round (June 2026). Indicators map to Tanzania&apos;s NMECDP framework (alignment to be confirmed during inception).
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -91,15 +91,15 @@ export default async function MEDashboardPage() {
               NMECDP-aligned indicators (indicative)
             </h3>
             <div style={{ display: 'grid', gap: '0.5rem' }}>
-              <Indicator label="Access for under-6 children (proxy)" status="green" value={`${stats.total_children.toLocaleString()} reached`} />
-              <Indicator label="Trained caregivers (% trained members)" status={stats.pct_green > 50 ? 'green' : 'amber'} value={`${stats.pct_green}%`} />
-              <Indicator label="Licensed centres" status={stats.expired_licences === 0 ? 'green' : 'amber'} value={`${Math.round(((stats.total_members - stats.expired_licences) / Math.max(1, stats.total_members)) * 100)}%`} />
-              <Indicator label="Child-caregiver ratio (target ≤ 1:12)" status="green" value="1:8" />
-              <Indicator label="WASH infrastructure (proxy)" status={stats.pct_red > 20 ? 'red' : stats.pct_red > 5 ? 'amber' : 'green'} value={`${stats.pct_red}% red`} />
-              <Indicator label="Quality assessments completed" status="green" value={`${stats.trainings_attended + stats.pct_green}`} />
+              <Indicator label="Access for under-6 children (proxy: enrolled)" status="green" value={`${stats.total_children.toLocaleString()} enrolled`} />
+              <Indicator label="Licence compliance" status={stats.expired_licences === 0 ? 'green' : 'amber'} value={`${Math.round(((stats.total_members - stats.expired_licences) / Math.max(1, stats.total_members)) * 100)}%`} />
+              <Indicator label="Quality rating — green centres" status={stats.pct_green > 50 ? 'green' : 'amber'} value={`${stats.pct_green}%`} />
+              <Indicator label="Quality rating — centres needing support" status={stats.pct_red > 20 ? 'red' : stats.pct_red > 5 ? 'amber' : 'green'} value={`${stats.pct_amber + stats.pct_red}% amber/red`} />
+              <Indicator label="Trainings completed (past events)" status="amber" value={stats.trainings_attended > 0 ? String(stats.trainings_attended) : 'Pending'} />
+              <Indicator label="Expired licences" status={stats.expired_licences === 0 ? 'green' : stats.expired_licences > 5 ? 'red' : 'amber'} value={String(stats.expired_licences)} />
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.85rem' }}>
-              These KPIs are indicative; final metric definitions and NMECDP indicator codes will be confirmed during the inception workshop with UVIWADA + CiC programme staff.
+              Preliminary — figures derived from the 234-centre rubric round (June 2026). All values reflect real membership records; NMECDP indicator alignment and final metric definitions will be confirmed during the inception workshop with UVIWADA + CiC programme staff.
             </p>
           </div>
         </div>
