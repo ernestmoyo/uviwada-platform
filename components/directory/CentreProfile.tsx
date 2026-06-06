@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { useI18n } from '@/lib/i18n'
 import type { DirectoryCentre } from '@/lib/directory'
 import { INFRA_SUBDOMAINS } from '@/lib/rubric'
+import { tierMeaning } from '@/lib/sector'
 
 const CentreAreaMap = dynamic(() => import('./CentreAreaMap').then((m) => m.CentreAreaMap), {
   ssr: false,
@@ -73,6 +74,9 @@ export function CentreProfile({ centre: c, verifiedDate }: { centre: DirectoryCe
                 <Stat label={sw ? 'Alama ya miundombinu' : 'Infrastructure score'} value={c.infraScore == null ? '—' : `${c.infraScore}/100`} />
                 <Stat label={sw ? 'Uwezo wa walezi' : 'Careworker capacity'} value={c.capacityScore == null ? '—' : `${c.capacityScore}/100`} />
               </div>
+              <p className="prof-tier-meaning">
+                <strong>{tierMeaning(c.tierShort, sw).title}.</strong> {tierMeaning(c.tierShort, sw).note}
+              </p>
               {!c.scored && (
                 <p className="prof-note">
                   {sw

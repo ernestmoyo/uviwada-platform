@@ -79,6 +79,37 @@ export function tierShort(t: string | null | undefined): TierShort {
   return 'Level 2'
 }
 
+// Progressive framing for each tier — the heart of the CiC PRIMER approach:
+// quality is a stepping-stone pathway, not a pass/fail gate. A "Level 2" centre
+// is *emerging and supported*, not *failing*. Keeps the platform supportive,
+// never punitive (V2 §540).
+export function tierMeaning(t: TierShort, sw: boolean): { title: string; note: string } {
+  switch (t) {
+    case 'Level 4':
+      return {
+        title: sw ? 'Kiwango cha juu kinacholengwa' : 'Highest intended standard',
+        note: sw ? 'Kinakidhi kiwango cha ubora kinacholengwa.' : 'Meets the intended quality benchmark.'
+      }
+    case 'Level 3':
+      return {
+        title: sw ? 'Kiwango cha utendaji' : 'Functional standard',
+        note: sw ? 'Ubora thabiti — kiko kwenye njia nzuri.' : 'Solid quality — well on the pathway.'
+      }
+    case 'Level 2':
+      return {
+        title: sw ? 'Kinachochipukia' : 'Emerging',
+        note: sw
+          ? 'Kiko kwenye njia ya kuboresha kwa msaada — si kufeli.'
+          : 'On the improvement pathway with support — not failing.'
+      }
+    default:
+      return {
+        title: sw ? 'Tathmini inaendelea' : 'Assessment in progress',
+        note: sw ? 'Alama kamili bado inasubiri.' : 'Full score still pending.'
+      }
+  }
+}
+
 function uniqCount(xs: Array<string | null>): number {
   return new Set(xs.filter((x): x is string => !!x)).size
 }

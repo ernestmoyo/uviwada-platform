@@ -8,6 +8,7 @@ import { MapSection } from '@/components/MapSection'
 import { NavBar } from '@/components/NavBar'
 import { PortalCta } from '@/components/PortalCta'
 import { Services } from '@/components/Services'
+import { OurApproach } from '@/components/OurApproach'
 import { TopBar } from '@/components/TopBar'
 import { WhyJoin } from '@/components/WhyJoin'
 import { fetchRubricSnapshot } from '@/lib/rubric-data'
@@ -33,6 +34,7 @@ export default async function HomePage() {
       <main>
         <Hero centres={kpis.centres} councils={kpis.councils} children={kpis.children} />
         <About />
+        <OurApproach />
         <WhyJoin />
         <Services />
         <Dashboard centres={rubric.centres} meta={rubric.meta} source={rubric.source} />

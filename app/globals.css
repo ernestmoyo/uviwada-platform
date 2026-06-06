@@ -706,6 +706,159 @@ img {
   text-align: center;
 }
 
+/* ===== Our Approach ===== */
+.appr-personas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+.appr-persona {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.3rem;
+  box-shadow: var(--shadow);
+}
+.appr-ava {
+  font-size: 2rem;
+  line-height: 1;
+}
+.appr-persona-id {
+  display: flex;
+  flex-direction: column;
+  margin: 0.5rem 0 0.6rem;
+}
+.appr-persona-id strong {
+  font-size: 1.1rem;
+  color: var(--primary-dark);
+}
+.appr-persona-id span {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.appr-persona p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+.appr-photo {
+  position: relative;
+  height: 220px;
+  border-radius: 16px;
+  margin-bottom: 1.75rem;
+  overflow: hidden;
+  /* Real photo layer first; branded gradient fallback shows if absent. */
+  background:
+    url('/images/dar-daycare.jpg') center / cover no-repeat,
+    linear-gradient(120deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+  display: flex;
+  align-items: flex-end;
+}
+.appr-photo-cap {
+  background: linear-gradient(transparent, rgba(15, 30, 50, 0.65));
+  color: #fff;
+  width: 100%;
+  padding: 1.5rem 1.25rem 1rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+}
+.appr-shift {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+.appr-shift-from,
+.appr-shift-to {
+  flex: 1 1 240px;
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.appr-shift-from {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+.appr-shift-to {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+.appr-shift-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.appr-shift-from strong {
+  color: #b91c1c;
+}
+.appr-shift-to strong {
+  color: #047857;
+}
+.appr-arrow {
+  align-self: center;
+  font-size: 1.6rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+.appr-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.appr-fact {
+  background: var(--primary-dark);
+  color: #fff;
+  border-radius: 14px;
+  padding: 1.2rem;
+  text-align: center;
+}
+.appr-fact-num {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.appr-fact-lbl {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  line-height: 1.4;
+  display: block;
+  margin-top: 0.3rem;
+}
+.appr-source {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin: 0 0 1.75rem;
+  text-align: center;
+}
+.appr-anchor {
+  background: var(--bg-alt);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  padding: 1.3rem 1.5rem;
+}
+.appr-anchor p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+.appr-anchor-tag {
+  margin-top: 0.9rem !important;
+  font-style: italic;
+  color: var(--primary-dark) !important;
+  font-weight: 600;
+}
+
 /* ===== Why Join ===== */
 .why-grid {
   display: grid;
@@ -945,6 +1098,18 @@ img {
   font-size: 0.76rem;
   color: var(--muted);
   margin: 0.7rem 0 0;
+}
+.prof-tier-meaning {
+  font-size: 0.82rem;
+  color: var(--text);
+  margin: 0.9rem 0 0;
+  line-height: 1.5;
+  background: var(--bg-alt);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+.prof-tier-meaning strong {
+  color: var(--primary-dark);
 }
 .prof-claim {
   display: flex;

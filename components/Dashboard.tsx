@@ -127,6 +127,11 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
                 />
               ))
             )}
+            <p className="dash-note" style={{ borderTop: '1px solid var(--border)', paddingTop: '0.6rem', marginTop: '0.7rem' }}>
+              {sw
+                ? 'Ngazi ni njia ya kuboresha kwa msaada: Ngazi 2 ni “kinachochipukia” — si kufeli.'
+                : 'Tiers are a supportive pathway: Level 2 is “emerging”, not failing.'}
+            </p>
             {tiers.pending > 0 && (
               <p className="dash-note">
                 {sw
