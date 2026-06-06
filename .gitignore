@@ -20,3 +20,12 @@ mobile/android/app/build/
 mobile/android/build/
 mobile/android/.gradle/
 mobile/android/local.properties
+
+# local screenshots (look-and-feel review only)
+_shots/
+
+# stray Python/pip artifacts (not part of the app)
+lib/site-packages/
+scripts/__pycache__/
+scripts/pip*.exe
+scripts/vba_extract.py

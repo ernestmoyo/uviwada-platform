@@ -22,11 +22,11 @@ export function MapSection({ centres }: MapSectionProps) {
       <div className="container">
         <div className="section-header">
           <span className="section-tag">{lang === 'sw' ? 'Ramani ya GIS' : 'GIS Map'}</span>
-          <h2>{lang === 'sw' ? `Vituo ${centres.length} Vilivyotathminiwa` : `${centres.length} Assessed Centres`}</h2>
+          <h2>{lang === 'sw' ? 'Ramani ya Vituo Vilivyotathminiwa' : 'Assessed Centres on the Map'}</h2>
           <p className="section-desc">
             {lang === 'sw'
-              ? 'Ramani ya mwingiliano inayoonyesha vituo halisi vya malezi katika kata za Dar es Salaam, vikiwa na rangi kulingana na ngazi ya ubora'
-              : 'Interactive map of the real assessed daycare centres across Dar es Salaam wards, coloured by quality tier'}
+              ? `Vituo ${centres.length} vyenye viwianishi vya GPS, kati ya 234 vilivyotathminiwa — vikiwa na rangi kulingana na ngazi ya ubora katika kata za Dar es Salaam`
+              : `${centres.length} of the 234 assessed centres have GPS coordinates — shown here across Dar es Salaam wards, coloured by quality tier`}
           </p>
         </div>
         <div className="map-container">
