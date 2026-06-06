@@ -116,6 +116,14 @@ export function CentreProfile({ centre: c, verifiedDate }: { centre: DirectoryCe
                 {improve.map((r) => (
                   <ProfBar key={r.label} label={r.label} value={r.value as number} />
                 ))}
+                {/* Pathway callout — only for scored Level 2 and Level 3 centres */}
+                {c.scored && (c.tierShort === 'Level 2' || c.tierShort === 'Level 3') && (
+                  <PathwayCallout
+                    tierShort={c.tierShort}
+                    improveLabels={improve.map((r) => r.label)}
+                    sw={sw}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -187,4 +195,40 @@ function ProfBar({ label, value }: { label: string; value: number }) {
 
 function shorten(s: string) {
   return s.length > 26 ? s.slice(0, 25) + '…' : s
+}
+
+function PathwayCallout({
+  tierShort,
+  improveLabels,
+  sw,
+}: {
+  tierShort: 'Level 2' | 'Level 3'
+  improveLabels: string[]
+  sw: boolean
+}) {
+  const nextTier = tierShort === 'Level 2' ? 'Level 3' : 'Level 4'
+  const areas = improveLabels.join(', ')
+
+  return (
+    <div className="prof-pathway">
+      <span className="prof-pathway-tag">
+        {sw ? 'Njia ya kupanda ngazi' : 'Pathway to next tier'}
+      </span>
+      <p>
+        {sw ? (
+          <>
+            <strong>Njia ya {nextTier}:</strong> Lenga maeneo ya kipaumbele hapa chini —{' '}
+            <strong>{areas}</strong>. Kila hatua ya maboresho inakukaribisha karibu zaidi na
+            {' '}{nextTier}.
+          </>
+        ) : (
+          <>
+            <strong>Pathway to {nextTier}:</strong> Focus on the priority areas below —{' '}
+            <strong>{areas}</strong>. Each improvement step brings this centre closer to{' '}
+            {nextTier}.
+          </>
+        )}
+      </p>
+    </div>
+  )
 }

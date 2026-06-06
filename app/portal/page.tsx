@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { AnnouncementsList } from '@/components/AnnouncementsList'
 import { LicenseCard } from '@/components/LicenseCard'
+import { MembershipStatusPill } from '@/components/membership/MembershipStatusPill'
 import { PortalNav } from '@/components/PortalNav'
 import { TrafficLightCard } from '@/components/TrafficLightCard'
 import { TrainingsList } from '@/components/TrainingsList'
@@ -49,9 +50,12 @@ export default async function PortalPage() {
                     {centre.ward} · {centre.district} · joined {new Date(centre.joined_at).toLocaleDateString()}
                   </div>
                 </div>
-                <Link href="/portal/membership" className="btn btn-primary">
-                  Membership & Certificate →
-                </Link>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <MembershipStatusPill memberId={user.member_id} centreName={centre.centre_name} />
+                  <Link href="/portal/membership" className="btn btn-primary">
+                    Membership & Certificate →
+                  </Link>
+                </div>
               </div>
 
               <div

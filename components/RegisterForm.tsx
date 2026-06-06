@@ -131,15 +131,15 @@ export function RegisterForm() {
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="age_band_0_2">0–2 yrs</label>
+          <label htmlFor="age_band_0_2">{lang === 'sw' ? 'Miaka 0–2' : '0–2 yrs'}</label>
           <input id="age_band_0_2" name="age_band_0_2" type="number" min="0" defaultValue={6} />
         </div>
         <div className="form-group">
-          <label htmlFor="age_band_3_4">3–4 yrs</label>
+          <label htmlFor="age_band_3_4">{lang === 'sw' ? 'Miaka 3–4' : '3–4 yrs'}</label>
           <input id="age_band_3_4" name="age_band_3_4" type="number" min="0" defaultValue={8} />
         </div>
         <div className="form-group">
-          <label htmlFor="age_band_5_6">5–6 yrs</label>
+          <label htmlFor="age_band_5_6">{lang === 'sw' ? 'Miaka 5–6' : '5–6 yrs'}</label>
           <input id="age_band_5_6" name="age_band_5_6" type="number" min="0" defaultValue={6} />
         </div>
       </div>

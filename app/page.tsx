@@ -4,6 +4,7 @@ import { Dashboard } from '@/components/Dashboard'
 import { FieldToolSection } from '@/components/FieldToolSection'
 import { Footer } from '@/components/Footer'
 import { Hero } from '@/components/Hero'
+import { ImpactCase } from '@/components/ImpactCase'
 import { MapSection } from '@/components/MapSection'
 import { NavBar } from '@/components/NavBar'
 import { PortalCta } from '@/components/PortalCta'
@@ -38,6 +39,7 @@ export default async function HomePage() {
         <WhyJoin />
         <Services />
         <Dashboard centres={rubric.centres} meta={rubric.meta} source={rubric.source} />
+        <ImpactCase />
         <MapSection centres={mapCentres} />
         <FieldToolSection />
         <PortalCta />

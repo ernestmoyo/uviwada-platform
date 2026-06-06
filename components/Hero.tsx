@@ -59,12 +59,6 @@ export function Hero({ centres, councils, children }: HeroProps) {
       <div className="hero-overlay" />
       <div className="container hero-content">
         <div className="hero-badge">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://www.childrenincrossfire.org/wp-content/uploads/2022/08/CIC_logo_color_rgb-1-e1660224305433.png"
-            alt="Children in Crossfire"
-            className="cic-logo-inline"
-          />
           <span>
             {lang === 'sw'
               ? 'Kwa ushirikiano na Children in Crossfire'

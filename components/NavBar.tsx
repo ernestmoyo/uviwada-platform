@@ -65,7 +65,7 @@ export function NavBar() {
         <Link href="/" className="logo" onClick={() => setOpen(false)}>
           <Image src="/uviwata_logo.png" alt="UVIWATA - Mtoto Kwanza" width={178} height={100} className="logo-img" style={{ height: 46, width: 'auto' }} priority />
         </Link>
-        <button className="menu-btn" onClick={() => setOpen((v) => !v)} aria-label="Menu">
+        <button className="menu-btn" onClick={() => setOpen((v) => !v)} aria-label="Menu" aria-expanded={open}>
           <span />
           <span />
           <span />

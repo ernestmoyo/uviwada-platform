@@ -29,7 +29,11 @@ export default async function MembershipPage() {
               <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{centreName}</h1>
               <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{snapshot.centre ? `${snapshot.centre.ward} · ${snapshot.centre.district}` : ''}</div>
             </div>
-            <Link href="/portal" className="btn btn-outline">
+            <Link
+              href="/portal"
+              className="btn btn-outline"
+              style={{ color: 'var(--primary-dark)', borderColor: 'var(--primary-dark)' }}
+            >
               ← My Centre
             </Link>
           </div>
