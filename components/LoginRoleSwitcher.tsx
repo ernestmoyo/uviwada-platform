@@ -101,11 +101,11 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
       <h3>{lang === 'sw' ? 'Chagua jukumu lako' : 'Pick your role'}</h3>
       <p className="form-note">
         {lang === 'sw'
-          ? 'Demo ya UVIWADA. Hakuna nenosiri.'
-          : 'UVIWADA demo. No password required.'}
+          ? 'Demo ya jukwaa la UVIWATA. Hakuna nenosiri.'
+          : 'UVIWATA platform demo. No password required.'}
       </p>
 
-      <h4 style={sectionHeader}>{lang === 'sw' ? 'Wafanyakazi wa UVIWADA' : 'UVIWADA Staff'}</h4>
+      <h4 style={sectionHeader}>{lang === 'sw' ? 'Sekretarieti ya UVIWADA (Dar es Salaam)' : 'UVIWADA Secretariat (Dar es Salaam)'}</h4>
       <div style={{ display: 'grid', gap: '0.5rem' }}>
         {SEED_USER_PRESETS.map((u) => (
           <button

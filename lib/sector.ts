@@ -191,6 +191,13 @@ export function uniqueCouncils(cs: RubricCentre[]): string[] {
   return Array.from(new Set(cs.map((c) => c.council).filter((x): x is string => !!x))).sort()
 }
 
+// Returns sorted unique ward names for a given council selection.
+// When council === 'All', returns all wards across all centres.
+export function wardsForCouncil(cs: RubricCentre[], council: string): string[] {
+  const subset = council === 'All' ? cs : cs.filter((c) => c.council === council)
+  return Array.from(new Set(subset.map((c) => c.ward).filter((w): w is string => !!w))).sort()
+}
+
 export function mapPoints(cs: RubricCentre[]): SectorMapPoint[] {
   return cs
     .filter((c) => c.lat != null && c.lng != null)

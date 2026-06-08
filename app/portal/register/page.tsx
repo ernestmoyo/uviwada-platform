@@ -13,11 +13,11 @@ export default function RegisterPage() {
       <main className="section">
         <div className="container" style={{ maxWidth: '760px' }}>
           <div className="section-header">
-            <span className="section-tag">UVIWADA</span>
+            <span className="section-tag">UVIWATA</span>
             <h2>Sajili Kituo Chako · Register Your Centre</h2>
             <p className="section-desc">
-              Jaza fomu hii ili kujiunga na UVIWADA. Utaingia moja kwa moja kwenye portal yako baada ya kujisajili. ·
-              Fill in this form to join UVIWADA. You will be signed in to your portal immediately after submission.
+              Jaza fomu hii ili kujiunga na UVIWATA. Utaingia moja kwa moja kwenye portal yako baada ya kujisajili. ·
+              Fill in this form to join UVIWATA. You will be signed in to your portal immediately after submission.
             </p>
           </div>
           <div className="portal-form-card">

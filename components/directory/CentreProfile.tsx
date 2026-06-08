@@ -54,7 +54,7 @@ export function CentreProfile({ centre: c, verifiedDate }: { centre: DirectoryCe
               {c.ownership && <span className="prof-badge prof-soft">{c.ownership}</span>}
             </div>
             <h1>{c.name}</h1>
-            <p className="prof-loc">📍 {c.ward ? `${c.ward}, ` : ''}{c.council ?? 'Dar es Salaam'} · {sw ? 'Mwanachama wa UVIWADA' : 'UVIWADA regional member'}</p>
+            <p className="prof-loc">📍 {c.ward ? `${c.ward}, ` : ''}{c.council ?? 'Dar es Salaam'} · {sw ? 'UVIWADA · Dar es Salaam (mkoa wa UVIWATA)' : 'UVIWADA · Dar es Salaam (a UVIWATA region)'}</p>
           </div>
 
           {/* Consent disclaimer */}

@@ -67,13 +67,13 @@ export function Hero({ centres, councils, children }: HeroProps) {
         </div>
         <h1>
           {lang === 'sw'
-            ? 'Kuimarisha Vituo vya Malezi ya Watoto Dar es Salaam'
-            : 'Strengthening Daycare Centres Across Dar es Salaam'}
+            ? 'Kuimarisha Sekta ya Malezi ya Watoto Tanzania'
+            : "Strengthening Tanzania's Daycare Sector"}
         </h1>
         <p className="hero-sub">
           {lang === 'sw'
-            ? "Jukwaa la kidijitali la UVIWADA linaunganisha, linasaidia na kuinua ubora wa vituo vya malezi katika maeneo ya watu wengi na mapato ya chini."
-            : "UVIWADA's digital platform connects, supports and elevates the quality of daycare centres in high-density, low-income areas."}
+            ? "Jukwaa la kidijitali la kitaifa la UVIWATA linaunganisha, linasaidia na kuinua ubora wa vituo vya malezi — likianza Dar es Salaam kupitia UVIWADA, mkoa wa mwanzilishi."
+            : "UVIWATA's national digital platform connects, supports and elevates the quality of daycare centres — starting in Dar es Salaam through UVIWADA, the founding region."}
         </p>
         <div className="hero-actions">
           <Link href="/directory" className="btn btn-primary">

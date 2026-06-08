@@ -54,7 +54,7 @@ export function PitchNav({ total }: PitchNavProps) {
   return (
     <>
       <div className={styles.cornerLogos}>
-        <img src="/logo.svg" alt="UVIWADA" />
+        <img src="/logo.svg" alt="UVIWATA" />
         <span className={styles.divider} />
         <strong style={{ fontSize: '0.85rem', color: '#fff', letterSpacing: '0.05em' }}>7Square</strong>
       </div>

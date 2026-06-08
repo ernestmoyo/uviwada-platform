@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     if (typeof console !== 'undefined') {
-      console.error('UVIWADA render error', error)
+      console.error('UVIWATA render error', error)
     }
   }, [error])
 
@@ -23,7 +23,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       >
         <h1 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Something went wrong</h1>
         <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-          The UVIWADA platform hit an unexpected error rendering this page. Try again, or visit the{' '}
+          The UVIWATA platform hit an unexpected error rendering this page. Try again, or visit the{' '}
           <Link href="/legacy" style={{ color: '#1A5FAA' }}>
             static fallback site
           </Link>{' '}

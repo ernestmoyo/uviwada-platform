@@ -22,14 +22,21 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
 
   const [q, setQ] = useState('')
   const [council, setCouncil] = useState('All')
+  const [ward, setWard] = useState('All')
   const [ownership, setOwnership] = useState('All')
   const [tier, setTier] = useState('All')
   const [sort, setSort] = useState<SortKey>('name')
+
+  const wardOptions = useMemo(() => {
+    const subset = council === 'All' ? centres : centres.filter((c) => c.council === council)
+    return Array.from(new Set(subset.map((c) => c.ward).filter((w): w is string => !!w))).sort()
+  }, [centres, council])
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
     const filtered = centres.filter((c) => {
       if (council !== 'All' && c.council !== council) return false
+      if (ward !== 'All' && c.ward !== ward) return false
       if (ownership !== 'All' && c.ownership !== ownership) return false
       if (tier !== 'All' && c.tierShort !== tier) return false
       if (needle) {
@@ -43,7 +50,7 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
     else if (sort === 'enrolment') sorted.sort((a, b) => (b.children ?? 0) - (a.children ?? 0))
     else sorted.sort((a, b) => (TIER_ORDER[a.tierShort] ?? 9) - (TIER_ORDER[b.tierShort] ?? 9) || a.name.localeCompare(b.name))
     return sorted
-  }, [centres, q, council, ownership, tier, sort])
+  }, [centres, q, council, ward, ownership, tier, sort])
 
   return (
     <div>
@@ -56,7 +63,20 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
           placeholder={sw ? 'Tafuta kwa jina au eneo…' : 'Search by name or area…'}
           aria-label={sw ? 'Tafuta kituo' : 'Search centres'}
         />
-        <Select label={sw ? 'Halmashauri' : 'Council'} value={council} onChange={setCouncil} options={['All', ...councils]} allLabel={sw ? 'Zote' : 'All'} />
+        <Select
+          label={sw ? 'Halmashauri' : 'Council'}
+          value={council}
+          onChange={(v) => { setCouncil(v); setWard('All') }}
+          options={['All', ...councils]}
+          allLabel={sw ? 'Zote' : 'All'}
+        />
+        <Select
+          label={sw ? 'Kata' : 'Ward'}
+          value={ward}
+          onChange={setWard}
+          options={['All', ...wardOptions]}
+          allLabel={sw ? 'Zote' : 'All wards'}
+        />
         <Select label={sw ? 'Umiliki' : 'Ownership'} value={ownership} onChange={setOwnership} options={['All', ...ownerships]} allLabel={sw ? 'Zote' : 'All'} />
         <Select label={sw ? 'Ngazi' : 'Tier'} value={tier} onChange={setTier} options={['All', 'Level 4', 'Level 3', 'Level 2']} allLabel={sw ? 'Zote' : 'All'} />
         <Select

@@ -5,12 +5,12 @@ import { useI18n } from '@/lib/i18n'
 const CARDS = [
   {
     icon: '🏠',
-    title_sw: "Chama cha Wamiliki",
-    title_en: "Owners' Association",
+    title_sw: "Chama cha Kitaifa cha Wamiliki",
+    title_en: "National Owners' Association",
     body_sw:
-      "UVIWADA ni chama cha wamiliki wa vituo vya malezi vya watoto vya binafsi Dar es Salaam, kimeanzishwa kuimarisha uratibu, uwakilishi na mawasiliano ndani ya sekta ya malezi.",
+      "UVIWATA ni chama cha kitaifa cha wamiliki wa vituo vya malezi vya watoto vya binafsi Tanzania, kilichoanzishwa kuimarisha uratibu, uwakilishi na mawasiliano ndani ya sekta. UVIWADA — chama cha mkoa wa Dar es Salaam — ndicho mkoa wa mwanzilishi na chanzo cha data ya sasa.",
     body_en:
-      "UVIWADA is a membership-based association of private daycare centre owners in Dar es Salaam, strengthening coordination, representation and communication within the childcare sector."
+      "UVIWATA is the national association of private daycare centre owners in Tanzania, strengthening coordination, representation and communication within the childcare sector. UVIWADA — the Dar es Salaam regional association — is the founding region and the source of current data."
   },
   {
     icon: '🤝',
@@ -39,7 +39,7 @@ export function About() {
       <div className="container">
         <div className="section-header">
           <span className="section-tag">{lang === 'sw' ? 'Kuhusu Sisi' : 'About Us'}</span>
-          <h2>{lang === 'sw' ? 'UVIWADA ni Nini?' : 'What is UVIWADA?'}</h2>
+          <h2>{lang === 'sw' ? 'UVIWATA ni Nini?' : 'What is UVIWATA?'}</h2>
         </div>
         <div className="about-grid">
           {CARDS.map((c) => (

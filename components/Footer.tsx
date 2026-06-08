@@ -11,11 +11,11 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Image src="/logo.svg" alt="UVIWADA" width={140} height={44} className="logo-img" />
+            <Image src="/logo.svg" alt="UVIWATA" width={140} height={44} className="logo-img" />
             <p>
               {lang === 'sw'
-                ? 'Umoja wa Vituo vya Watoto wa Dar es Salaam. Kuimarisha sekta ya malezi ya watoto kupitia uratibu, uwakilishi na huduma za kidijitali.'
-                : 'Daycare Centres Association of Dar es Salaam. Strengthening the childcare sector through coordination, representation and digital services.'}
+                ? 'Chama cha Kitaifa cha Wamiliki wa Vituo vya Malezi Tanzania (UVIWATA). Kuimarisha sekta ya malezi ya watoto kupitia uratibu, uwakilishi na huduma za kidijitali — likianza Dar es Salaam kupitia UVIWADA, mkoa wa mwanzilishi.'
+                : 'National Association of Daycare Centre Owners in Tanzania (UVIWATA). Strengthening the childcare sector through coordination, representation and digital services — starting in Dar es Salaam through UVIWADA, the founding region.'}
             </p>
           </div>
           <div className="footer-links">
@@ -39,7 +39,7 @@ export function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 UVIWADA. {lang === 'sw' ? 'Haki zote zimehifadhiwa.' : 'All rights reserved.'}</p>
+          <p>© 2026 UVIWATA. {lang === 'sw' ? 'Haki zote zimehifadhiwa.' : 'All rights reserved.'}</p>
           <p>
             {lang === 'sw'
               ? 'Jukwaa limetengenezwa na 7Square Group Limited'

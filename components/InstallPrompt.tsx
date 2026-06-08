@@ -64,7 +64,7 @@ export function InstallPrompt({ compact = false }: { compact?: boolean }) {
         }}
       >
         On Android Chrome: tap the <strong>⋮ menu</strong> → <strong>Add to Home screen</strong> to install the
-        UVIWADA Assessor app. Works fully offline once installed.
+        UVIWATA Assessor app. Works fully offline once installed.
       </div>
     )
   }
@@ -88,7 +88,7 @@ export function InstallPrompt({ compact = false }: { compact?: boolean }) {
       className="btn btn-primary"
       style={{ padding: compact ? '0.45rem 0.95rem' : '0.7rem 1.4rem', fontSize: compact ? '0.85rem' : '0.95rem' }}
     >
-      {busy ? 'Installing…' : '📱 Install UVIWADA Assessor app'}
+      {busy ? 'Installing…' : '📱 Install UVIWATA Assessor app'}
     </button>
   )
 }

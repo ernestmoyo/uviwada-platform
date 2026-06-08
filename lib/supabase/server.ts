@@ -2,6 +2,13 @@ import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 
+// CRITICAL: force every Supabase read past Next.js's fetch Data Cache.
+// Without this, the App Router caches/deduplicates the underlying GET requests
+// and can serve one request's data to another — e.g. a member who just signed
+// in seeing the PREVIOUSLY logged-in centre's portal. `no-store` guarantees the
+// session-scoped data (auth, portal, admin) is always fetched fresh.
+const noStoreFetch: typeof fetch = (input, init) => fetch(input, { ...init, cache: 'no-store' })
+
 // Cookie-aware client — only call from request-scoped contexts (Server
 // Components in dynamic pages, Route Handlers, Server Actions). Reads / writes
 // the demo session cookie via @supabase/ssr.
@@ -13,6 +20,7 @@ export function getSupabaseServer() {
   }
   const cookieStore = cookies()
   return createServerClient(url, key, {
+    global: { fetch: noStoreFetch },
     cookies: {
       getAll() {
         return cookieStore.getAll()
@@ -39,7 +47,8 @@ export function getSupabaseAdmin() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return null
   return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: noStoreFetch }
   })
 }
 

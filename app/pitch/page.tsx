@@ -14,7 +14,7 @@ export default function PitchPage() {
         <div className={styles.slideInner}>
           <p className={styles.coverEyebrow}>Practical Pitch &amp; Demonstration</p>
           <h1 className={styles.coverTitle}>
-            UVIWADA Digital Platform
+            UVIWATA National Digital Platform
             <br />
             <span style={{ background: 'linear-gradient(135deg, #ff5961, #D42027)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
               from inception to first phase
@@ -22,7 +22,7 @@ export default function PitchPage() {
           </h1>
           <p className={styles.coverSub}>
             A working four-layer platform — public website, member portal, M&amp;E dashboard, administrative
-            backend — usable today, scalable to UVIWATA national and other regional associations tomorrow.
+            backend — launched through UVIWADA (Dar es Salaam) and designed to scale across all UVIWATA regional associations.
           </p>
           <div className={styles.coverMeta}>
             <div>
@@ -173,7 +173,7 @@ export default function PitchPage() {
               <div>
                 <p className={styles.layerTitle}>Programme data &amp; M&amp;E dashboard</p>
                 <p className={styles.layerBody}>
-                  UVIWADA secretariat dashboard + CiC programme staff dashboard with NMECDP-aligned
+                  UVIWATA / UVIWADA secretariat dashboard + CiC programme staff dashboard with NMECDP-aligned
                   indicators. One-click exports for Conrad N. Hilton Foundation donor reporting.
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default function PitchPage() {
               <h3 className={styles.cardTitle}>✓ Live M&amp;E dashboard</h3>
               <p className={styles.cardBody}>
                 NMECDP-indicative KPIs, quality donut, membership growth, ward bar chart, CSV +
-                Print-PDF export, dual UVIWADA / CiC views.
+                Print-PDF export, dual UVIWATA / CiC views.
               </p>
             </div>
             <div className={styles.card}>
@@ -472,8 +472,8 @@ export default function PitchPage() {
           <p className={styles.lead}>
             Six Rivers Community Intelligence Platform — a Tanzania-based platform with ward-level GIS,
             member registration and tracking, field data collection, impact dashboards with donor
-            reporting, and offline-capable mobile design. The closest architectural parallel to UVIWADA
-            across all four proposed layers.
+            reporting, and offline-capable mobile design. The closest architectural parallel to the UVIWATA
+            platform across all four proposed layers.
           </p>
 
           <div className={styles.grid3}>
@@ -498,7 +498,7 @@ export default function PitchPage() {
               <h3 className={styles.cardTitle}>Wilson Compliance — NZ</h3>
               <p className={styles.cardBody}>
                 30-item compliance checklists, certificate generation, training records with expiry —
-                directly relevant to UVIWADA quality and certificates.
+                directly relevant to UVIWATA quality and certificates.
               </p>
             </div>
           </div>

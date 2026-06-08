@@ -23,10 +23,15 @@ const fmt = (n: number | null | undefined) => (n == null ? '—' : Math.round(n)
 export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
   const all = snapshot.centres
   const [council, setCouncil] = useState<string>('All')
+  const [ward, setWard] = useState<string>('All')
   const [ownership, setOwnership] = useState<string>('All')
   const [tier, setTier] = useState<string>('All')
 
   const councils = useMemo(() => ['All', ...uniq(all.map((c) => c.council))], [all])
+  const wardOptions = useMemo(() => {
+    const subset = council === 'All' ? all : all.filter((c) => c.council === council)
+    return ['All', ...uniq(subset.map((c) => c.ward))]
+  }, [all, council])
   const ownerships = useMemo(() => ['All', ...uniq(all.map((c) => c.ownership))], [all])
   const tiers = ['All', 'Level 4', 'Level 3', 'Level 2']
 
@@ -35,10 +40,11 @@ export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
       all.filter(
         (c) =>
           (council === 'All' || c.council === council) &&
+          (ward === 'All' || c.ward === ward) &&
           (ownership === 'All' || c.ownership === ownership) &&
           (tier === 'All' || tierShort(c.tier) === tier)
       ),
-    [all, council, ownership, tier]
+    [all, council, ward, ownership, tier]
   )
 
   const k = useMemo(() => kpis(centres), [centres])
@@ -67,7 +73,8 @@ export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
 
       {/* filters */}
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-        <Filter label="Council" value={council} options={councils} onChange={setCouncil} />
+        <Filter label="Council" value={council} options={councils} onChange={(v) => { setCouncil(v); setWard('All') }} />
+        <Filter label="Ward" value={ward} options={wardOptions} onChange={setWard} />
         <Filter label="Ownership" value={ownership} options={ownerships} onChange={setOwnership} />
         <Filter label="Tier" value={tier} options={tiers} onChange={setTier} />
         <div style={{ alignSelf: 'flex-end', fontSize: '0.82rem', color: 'var(--muted)' }}>

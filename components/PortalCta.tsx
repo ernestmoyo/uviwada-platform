@@ -44,7 +44,7 @@ export function PortalCta() {
       <div className="container">
         <div className="section-header">
           <span className="section-tag">{lang === 'sw' ? 'Portal ya Wanachama' : 'Member Portal'}</span>
-          <h2>{lang === 'sw' ? 'Jiunge na UVIWADA Leo' : 'Join UVIWADA Today'}</h2>
+          <h2>{lang === 'sw' ? 'Jiunge na UVIWATA Leo' : 'Join UVIWATA Today'}</h2>
         </div>
         <div className="portal-preview">
           <div className="portal-form-card">

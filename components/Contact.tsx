@@ -9,7 +9,7 @@ export function Contact() {
       <div className="container">
         <div className="section-header">
           <span className="section-tag">{lang === 'sw' ? 'Wasiliana Nasi' : 'Contact Us'}</span>
-          <h2>{lang === 'sw' ? 'Wasiliana na UVIWADA' : 'Get in Touch with UVIWADA'}</h2>
+          <h2>{lang === 'sw' ? 'Wasiliana na UVIWATA / UVIWADA' : 'Get in Touch with UVIWATA'}</h2>
         </div>
         <div className="contact-grid">
           <div className="contact-info">

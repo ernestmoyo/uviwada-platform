@@ -14,6 +14,7 @@ import {
   registrationDist,
   tierStats,
   uniqueCouncils,
+  wardsForCouncil,
   pct
 } from '@/lib/sector'
 
@@ -29,11 +30,18 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
   const { lang } = useI18n()
   const sw = lang === 'sw'
   const [council, setCouncil] = useState('All')
+  const [ward, setWard] = useState('All')
 
   const councils = useMemo(() => ['All', ...uniqueCouncils(all)], [all])
+  const wardOptions = useMemo(() => wardsForCouncil(all, council), [all, council])
   const centres = useMemo(
-    () => (council === 'All' ? all : all.filter((c) => c.council === council)),
-    [all, council]
+    () =>
+      all.filter(
+        (c) =>
+          (council === 'All' || c.council === council) &&
+          (ward === 'All' || c.ward === ward)
+      ),
+    [all, council, ward]
   )
 
   const k = useMemo(() => computeKpis(centres), [centres])
@@ -74,10 +82,27 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
         <div className="dash-filterbar">
           <label className="dash-filter">
             <span>{sw ? 'Halmashauri' : 'Council'}</span>
-            <select value={council} onChange={(e) => setCouncil(e.target.value)}>
+            <select
+              value={council}
+              onChange={(e) => {
+                setCouncil(e.target.value)
+                setWard('All')
+              }}
+            >
               {councils.map((c) => (
                 <option key={c} value={c}>
                   {c === 'All' ? (sw ? 'Zote' : 'All councils') : c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="dash-filter">
+            <span>{sw ? 'Kata' : 'Ward'}</span>
+            <select value={ward} onChange={(e) => setWard(e.target.value)}>
+              <option value="All">{sw ? 'Zote' : 'All wards'}</option>
+              {wardOptions.map((w) => (
+                <option key={w} value={w}>
+                  {w}
                 </option>
               ))}
             </select>
