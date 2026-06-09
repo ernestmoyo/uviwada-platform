@@ -9,8 +9,8 @@ export function TopBar() {
       <div className="container top-bar-inner">
         <span>
           {lang === 'sw'
-            ? 'Kuimarisha huduma za malezi Dar es Salaam'
-            : 'Strengthening childcare services in Dar es Salaam'}
+            ? 'Kuimarisha sekta ya malezi ya watoto Tanzania'
+            : "Strengthening Tanzania's childcare sector"}
         </span>
         <button className="lang-toggle" onClick={toggle} aria-label="Switch language">
           <span className={`lang-flag ${lang === 'en' ? 'active' : ''}`}>EN</span> /{' '}
