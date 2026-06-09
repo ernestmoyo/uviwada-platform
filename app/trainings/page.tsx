@@ -83,8 +83,8 @@ export default function TrainingsPage() {
               </h1>
               <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', opacity: 0.85 }}>
                 {sw
-                  ? 'Mafunzo ya vitendo kwa wamiliki na walezi wa vituo vya malezi — Dar es Salaam.'
-                  : 'Practical training for daycare owners and caregivers — Dar es Salaam.'}
+                  ? 'Mafunzo ya vitendo kwa wamiliki na walezi wa vituo vya malezi kote Tanzania — yakianza Dar es Salaam.'
+                  : 'Practical training for daycare owners and caregivers across Tanzania — starting in Dar es Salaam.'}
               </p>
             </div>
           </div>
