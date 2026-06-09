@@ -2490,3 +2490,14 @@ img {
 .hidden {
   display: none !important;
 }
+
+/* Active-centre indicator on printable docs (receipt/certificate) */
+.doc-signedin {
+  font-size: 0.85rem;
+  color: var(--muted);
+  align-self: center;
+  margin: 0 auto;
+}
+.doc-signedin strong {
+  color: var(--primary-dark);
+}

@@ -52,6 +52,7 @@ export function Certificate({ memberId, centreName, ownerName, ward, district }:
         <Link className="btn btn-outline" href="/portal/membership">
           ← Membership
         </Link>
+        <span className="doc-signedin">Signed in as: <strong>{centreName}</strong></span>
         <button className="btn btn-primary" onClick={() => window.print()}>
           Download PDF
         </button>
