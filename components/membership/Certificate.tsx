@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-import { formatDate, latestPayment, load, type MembershipRecord } from '@/lib/membership'
-
 interface Props {
   memberId: string
   centreName: string
@@ -13,25 +11,57 @@ interface Props {
   district: string
 }
 
-export function Certificate({ memberId, centreName, ownerName, ward, district }: Props) {
-  const [record, setRecord] = useState<MembershipRecord | null>(null)
+interface CertStatus {
+  status: 'none' | 'requested' | 'issued' | 'revoked'
+  cert_ref: string | null
+  period_label: string | null
+  approved_at: string | null
+}
+
+function fmt(iso: string | null): string {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString()
+  } catch {
+    return ''
+  }
+}
+
+export function Certificate({ memberId: _memberId, centreName, ownerName, ward, district }: Props) {
+  const [cert, setCert] = useState<CertStatus | null>(null)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    setRecord(load(memberId, centreName))
-    setReady(true)
-  }, [memberId, centreName])
+    let alive = true
+    void fetch('/api/members/certificate', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { status: 'none' }))
+      .then((j: CertStatus) => {
+        if (alive) {
+          setCert(j)
+          setReady(true)
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setCert({ status: 'none', cert_ref: null, period_label: null, approved_at: null })
+          setReady(true)
+        }
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   if (!ready) return null
 
-  if (!record || record.certStatus !== 'issued') {
+  if (!cert || cert.status !== 'issued') {
     return (
       <div className="doc-shell">
         <div className="doc-empty">
           <p>
-            {record?.certStatus === 'requested'
+            {cert?.status === 'requested'
               ? 'Your certificate is awaiting Secretariat approval.'
-              : 'Pay your membership fee to request a certificate.'}
+              : 'Once the Secretariat records your verified payment, your certificate is issued here.'}
           </p>
           <Link className="btn btn-primary" href="/portal/membership">
             ← Back to Membership
@@ -41,21 +71,18 @@ export function Certificate({ memberId, centreName, ownerName, ward, district }:
     )
   }
 
-  const payment = latestPayment(record)
-  const validThrough = payment ? formatDate(payment.periodTo) : '—'
-  const issued = record.certApprovedDate ? formatDate(record.certApprovedDate) : formatDate(new Date().toISOString())
+  const issued = fmt(cert.approved_at) || fmt(new Date().toISOString())
 
   return (
     <div className="doc-shell doc-shell-wide">
-      <style>{'@media print { @page { size: A4 landscape; margin: 8mm } }'}</style>
       <div className="doc-toolbar no-print">
         <Link className="btn btn-outline" href="/portal/membership">
           ← Membership
         </Link>
         <span className="doc-signedin">Signed in as: <strong>{centreName}</strong></span>
-        <button className="btn btn-primary" onClick={() => window.print()}>
+        <a className="btn btn-primary" href="/api/members/certificate/pdf">
           Download PDF
-        </button>
+        </a>
       </div>
 
       <div className="cert">
@@ -79,13 +106,13 @@ export function Certificate({ memberId, centreName, ownerName, ward, district }:
             <p className="cert-body">
               is a registered member in good standing of <strong>UVIWATA</strong>, through its Dar es Salaam regional
               association <strong>UVIWADA</strong>, recognised within the national daycare sector and entitled to all
-              rights and benefits of membership for the period ending <strong>{validThrough}</strong>.
+              rights and benefits of membership for <strong>{cert.period_label ?? 'the current membership period'}</strong>.
             </p>
 
             <div className="cert-foot">
               <div className="cert-sig">
                 <div className="cert-sig-line">UVIWATA Secretariat</div>
-                <span>{record.certApprovedBy ?? 'Authorised Signatory'}</span>
+                <span>Authorised Signatory</span>
               </div>
 
               <div className="cert-seal">
@@ -102,15 +129,11 @@ export function Certificate({ memberId, centreName, ownerName, ward, district }:
             </div>
 
             <div className="cert-meta">
-              <div className="cert-qr" aria-hidden>
-                <div className="cert-qr-grid" />
-                <span>Scan to verify</span>
-              </div>
               <div className="cert-ref">
                 <span>Certificate No.</span>
-                <strong>{record.certRef}</strong>
+                <strong>{cert.cert_ref}</strong>
               </div>
-              <div className="cert-tag">“Tanzania’s trusted digital gateway for a visible, connected and stronger daycare sector.”</div>
+              <div className="cert-tag">&ldquo;Tanzania&rsquo;s trusted digital gateway for a visible, connected and stronger daycare sector.&rdquo;</div>
             </div>
           </div>
         </div>

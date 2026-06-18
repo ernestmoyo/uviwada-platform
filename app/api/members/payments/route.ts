@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { getCurrentUser } from '@/lib/auth'
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase/server'
+import { ensureCertificateRequest } from '@/lib/certificates'
 
 // Manual membership payment recording (automated integration deferred).
 // reference_number and method are ALWAYS required — for cash, the secretariat
@@ -45,11 +46,22 @@ export async function POST(request: Request) {
     reference_number: p.reference_number,
     method: p.method,
     recorded_by: user.id,
-    note: p.note || null
+    note: p.note || null,
+    // The secretariat records the payment after physically verifying it.
+    status: 'verified',
+    verified_at: new Date().toISOString(),
+    verified_by: user.id
   })
   if (error) {
     console.error('payments: insert failed', error)
     return NextResponse.json({ error: 'Could not record payment. Please try again.' }, { status: 500 })
+  }
+
+  // A verified payment automatically raises a certificate request (Issue 12).
+  try {
+    await ensureCertificateRequest(supabase, p.member_id)
+  } catch (e) {
+    console.error('payments: certificate request failed (non-fatal)', e)
   }
   return NextResponse.json({ ok: true })
 }

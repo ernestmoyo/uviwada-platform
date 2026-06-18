@@ -1,43 +1,82 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
-import { approveCertificate, formatDate, formatTZS, isActive, latestPayment, listAll, onChange, type MembershipRecord } from '@/lib/membership'
 
 interface Props {
   approverName: string
 }
 
-export function CertificateApprovals({ approverName }: Props) {
+interface CertItem {
+  id: string
+  status: string
+  cert_ref: string | null
+  period_label: string | null
+  requested_at: string
+  approved_at: string | null
+  centre_name: string
+  ward: string | null
+}
+
+function fmt(iso: string | null): string {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString()
+  } catch {
+    return ''
+  }
+}
+
+export function CertificateApprovals({ approverName: _approverName }: Props) {
   const { lang } = useI18n()
   const sw = lang === 'sw'
-  const [records, setRecords] = useState<MembershipRecord[]>([])
-  const [ready, setReady] = useState(false)
+  const [items, setItems] = useState<CertItem[] | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
 
-  useEffect(() => {
-    setRecords(listAll())
-    setReady(true)
-    return onChange(() => setRecords(listAll()))
+  const load = useCallback(async () => {
+    const res = await fetch('/api/admin/certificates', { cache: 'no-store' })
+    if (res.ok) {
+      const j = (await res.json()) as { items?: CertItem[] }
+      setItems(j.items ?? [])
+    } else {
+      setItems([])
+    }
   }, [])
 
-  if (!ready) return null
+  useEffect(() => {
+    void load()
+  }, [load])
 
-  const pending = records.filter((r) => r.certStatus === 'requested')
-  const issued = records.filter((r) => r.certStatus === 'issued')
-
-  function approve(memberId: string) {
-    approveCertificate(memberId, approverName)
-    setRecords(listAll())
+  async function approve(id: string) {
+    setBusy(id)
+    const res = await fetch('/api/admin/certificates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+    if (res.ok) await load()
+    setBusy(null)
   }
 
-  if (records.length === 0) {
+  if (items === null) {
+    return (
+      <div className="mem-card">
+        <p className="mem-note">{sw ? 'Inapakia…' : 'Loading…'}</p>
+      </div>
+    )
+  }
+
+  const pending = items.filter((r) => r.status === 'requested')
+  const issued = items.filter((r) => r.status === 'issued')
+
+  if (items.length === 0) {
     return (
       <div className="mem-card">
         <p className="mem-note">
           {sw
-            ? 'Hakuna maombi ya vyeti bado. Maombi yataonekana hapa baada ya mwanachama kulipa ada (kwenye kifaa hiki).'
-            : 'No certificate requests yet. Requests appear here once a member pays their fee (on this device).'}
+            ? 'Hakuna maombi ya vyeti bado. Yataonekana hapa baada ya Sekretarieti kurekodi malipo yaliyothibitishwa.'
+            : 'No certificate requests yet. They appear here once the secretariat records a verified payment.'}
         </p>
       </div>
     )
@@ -55,28 +94,30 @@ export function CertificateApprovals({ approverName }: Props) {
           <div className="mem-table">
             <div className="mem-trow mem-thead cert-approve-row">
               <span>{sw ? 'Kituo' : 'Centre'}</span>
-              <span>{sw ? 'Namba ya cheti' : 'Certificate no.'}</span>
-              <span>{sw ? 'Hali ya malipo' : 'Payment'}</span>
+              <span>{sw ? 'Kipindi' : 'Period'}</span>
+              <span>{sw ? 'Imeombwa' : 'Requested'}</span>
               <span />
             </div>
-            {pending.map((r) => {
-              const p = latestPayment(r)
-              return (
-                <div className="mem-trow cert-approve-row" key={r.memberId}>
-                  <span><strong>{r.centreName}</strong></span>
-                  <span>{r.certRef}</span>
-                  <span>
-                    {p ? `${formatTZS(p.amount)} TZS · ${formatDate(p.date)}` : '—'}
-                    {isActive(r) ? '' : sw ? ' (imeisha)' : ' (expired)'}
-                  </span>
-                  <span style={{ textAlign: 'right' }}>
-                    <button className="btn btn-primary" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => approve(r.memberId)}>
-                      {sw ? 'Idhinisha & toa' : 'Approve & issue'}
-                    </button>
-                  </span>
-                </div>
-              )
-            })}
+            {pending.map((r) => (
+              <div className="mem-trow cert-approve-row" key={r.id}>
+                <span>
+                  <strong>{r.centre_name}</strong>
+                  {r.ward ? <span style={{ color: 'var(--muted)' }}> · {r.ward}</span> : null}
+                </span>
+                <span>{r.period_label ?? '—'}</span>
+                <span>{fmt(r.requested_at)}</span>
+                <span style={{ textAlign: 'right' }}>
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+                    disabled={busy === r.id}
+                    onClick={() => approve(r.id)}
+                  >
+                    {busy === r.id ? (sw ? 'Inatoa…' : 'Issuing…') : sw ? 'Idhinisha & toa' : 'Approve & issue'}
+                  </button>
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -88,10 +129,10 @@ export function CertificateApprovals({ approverName }: Props) {
           </div>
           <div className="mem-table">
             {issued.map((r) => (
-              <div className="mem-trow cert-approve-row" key={r.memberId}>
-                <span><strong>{r.centreName}</strong></span>
-                <span>{r.certRef}</span>
-                <span>{r.certApprovedDate ? formatDate(r.certApprovedDate) : ''}</span>
+              <div className="mem-trow cert-approve-row" key={r.id}>
+                <span><strong>{r.centre_name}</strong></span>
+                <span>{r.cert_ref}</span>
+                <span>{fmt(r.approved_at)}</span>
                 <span style={{ textAlign: 'right', color: '#166534', fontWeight: 600 }}>{sw ? '✓ Imetolewa' : '✓ Issued'}</span>
               </div>
             ))}
