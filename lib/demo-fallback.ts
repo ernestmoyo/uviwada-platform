@@ -60,6 +60,7 @@ function buildCentre(s: SeedCentre, idx: number): DemoCentreRow {
     centre_name: s.name,
     ward: s.ward,
     district: s.district,
+    address: null,
     phone: `+25575${String(2000000 + idx * 137).padStart(7, '0')}`,
     email: idx % 3 === 0 ? `${s.name.replace(/\s+/g, '.').toLowerCase()}@uviwada.demo` : null,
     children_count: totalChildren,
@@ -293,6 +294,7 @@ export function listDemoMembersForOrg(orgId: string): AdminMember[] {
     license_number: c.license_number,
     license_expiry: c.license_expiry,
     latest_quality: c.latest_quality,
+    membership_status: 'approved',
     joined_at: c.joined_at
   }))
 }

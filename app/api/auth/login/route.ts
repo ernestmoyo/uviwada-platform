@@ -65,6 +65,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Centre not found' }, { status: 404 })
     }
 
+    // Issue 3: gate sign-in on secretariat approval. Fetched as a SEPARATE
+    // best-effort query so that if migration 0005 hasn't been applied yet
+    // (column absent) the query simply yields nothing and we default to
+    // 'approved' — existing owners are never locked out by a deploy-order gap.
+    // Existing centres were back-filled to 'approved' by the migration, so
+    // only newly-registered (pending) or rejected centres are blocked.
+    let status = 'approved'
+    const { data: statusRow } = await supabase
+      .from('members')
+      .select('membership_status')
+      .eq('id', parsed.member_id)
+      .maybeSingle()
+    const fetchedStatus = (statusRow as { membership_status?: string } | null)?.membership_status
+    if (fetchedStatus) status = fetchedStatus
+    if (status === 'pending') {
+      return NextResponse.json(
+        {
+          error:
+            'Your registration is awaiting approval by the UVIWATA secretariat. You will be able to sign in once it is approved.'
+        },
+        { status: 403 }
+      )
+    }
+    if (status === 'rejected') {
+      return NextResponse.json(
+        { error: 'Your registration was not approved. Please contact the UVIWATA secretariat.' },
+        { status: 403 }
+      )
+    }
+
     let ownerUserId = member.owner_user_id as string | null
 
     if (!ownerUserId) {

@@ -7,6 +7,8 @@ import {
 } from './demo-fallback'
 import type { LicenseStatus, QualityRating } from './types/database'
 
+export type MembershipStatus = 'pending' | 'approved' | 'rejected'
+
 export interface AdminMember {
   id: string
   centre_name: string
@@ -20,6 +22,7 @@ export interface AdminMember {
   license_number: string | null
   license_expiry: string | null
   latest_quality: QualityRating | null
+  membership_status: MembershipStatus
   joined_at: string
 }
 
@@ -84,6 +87,7 @@ interface MemberRow {
   license_number: string | null
   license_expiry: string | null
   latest_quality: QualityRating | null
+  membership_status: MembershipStatus | null
   joined_at: string
 }
 
@@ -92,6 +96,8 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
   const supabase = getSupabaseAdmin()
   if (!supabase) return listDemoMembersForOrg(orgId)
   try {
+    // Base columns only — does NOT reference membership_status, so the real
+    // member list still loads even if migration 0005 hasn't been applied yet.
     const { data } = await supabase
       .from('members')
       .select(
@@ -99,9 +105,22 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
       )
       .eq('org_id', orgId)
       .order('centre_name')
-    const rows = (data ?? []) as MemberRow[]
+    const rows = (data ?? []) as Omit<MemberRow, 'membership_status'>[]
     if (rows.length === 0) return listDemoMembersForOrg(orgId)
-    return rows
+
+    // Best-effort overlay of membership_status. If the column is absent
+    // (pre-migration), this query yields nothing and every centre defaults to
+    // 'approved' so the table still renders normally.
+    const statusById = new Map<string, MembershipStatus>()
+    const { data: statusRows } = await supabase
+      .from('members')
+      .select('id, membership_status')
+      .eq('org_id', orgId)
+    ;((statusRows ?? []) as Array<{ id: string; membership_status: MembershipStatus | null }>).forEach((s) => {
+      if (s.membership_status) statusById.set(s.id, s.membership_status)
+    })
+
+    return rows.map((r) => ({ ...r, membership_status: statusById.get(r.id) ?? 'approved' }))
   } catch {
     return listDemoMembersForOrg(orgId)
   }

@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-import type { AdminMember } from '@/lib/admin-data'
+import type { AdminMember, MembershipStatus } from '@/lib/admin-data'
 import type { LicenseStatus, QualityRating } from '@/lib/types/database'
 
 export interface MembersTableInitialFilters {
@@ -23,11 +24,40 @@ const QUALITY_OPTIONS: Array<QualityRating | 'all'> = ['all', 'green', 'amber', 
 const LICENSE_OPTIONS: Array<LicenseStatus | 'all'> = ['all', 'fully_licensed', 'pending', 'not_applied', 'expired']
 
 export function MembersTable({ members, readOnly = false, initialFilters = {} }: MembersTableProps) {
+  const router = useRouter()
   const [search, setSearch] = useState(initialFilters.q ?? '')
   const [ward, setWard] = useState(initialFilters.ward ?? 'all')
   const [district, setDistrict] = useState(initialFilters.district ?? 'all')
   const [quality, setQuality] = useState<string>(initialFilters.quality ?? 'all')
   const [license, setLicense] = useState<string>(initialFilters.license ?? 'all')
+  const [statusBusyId, setStatusBusyId] = useState<string | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
+
+  const pendingCount = useMemo(() => members.filter((m) => m.membership_status === 'pending').length, [members])
+
+  async function setMembershipStatus(memberId: string, status: MembershipStatus) {
+    if (statusBusyId) return
+    setStatusBusyId(memberId)
+    setStatusError(null)
+    try {
+      const res = await fetch('/api/members/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId, status })
+      })
+      const json = (await res.json()) as { ok?: boolean; error?: string }
+      if (!res.ok || !json.ok) {
+        setStatusError(json.error ?? 'Could not update status')
+        setStatusBusyId(null)
+        return
+      }
+      router.refresh()
+      setStatusBusyId(null)
+    } catch {
+      setStatusError('Network error — please try again.')
+      setStatusBusyId(null)
+    }
+  }
 
   const wards = useMemo(() => Array.from(new Set(members.map((m) => m.ward))).sort(), [members])
   const districts = useMemo(() => Array.from(new Set(members.map((m) => m.district))).sort(), [members])
@@ -168,6 +198,29 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
         </div>
       )}
 
+      {pendingCount > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            background: '#fef3c7',
+            border: '1px solid #fcd34d',
+            color: '#92400e',
+            borderRadius: 8,
+            padding: '0.6rem 1rem',
+            marginBottom: '0.75rem',
+            fontSize: '0.88rem'
+          }}
+        >
+          <strong>{pendingCount}</strong> centre{pendingCount === 1 ? '' : 's'} awaiting approval.
+          {readOnly && ' (read-only — sign in as secretariat to approve)'}
+        </div>
+      )}
+      {statusError && (
+        <p style={{ color: '#991b1b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{statusError}</p>
+      )}
+
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
         <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
@@ -181,12 +234,13 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
               <th style={th}>License</th>
               <th style={th}>Expiry</th>
               <th style={th}>Joined</th>
+              <th style={th}>Membership</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+                <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
                   No members match the current filters.
                 </td>
               </tr>
@@ -204,6 +258,27 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
                 <td style={td}>{licensePill(m.license_status)}</td>
                 <td style={td}>{m.license_expiry ? new Date(m.license_expiry).toLocaleDateString() : '—'}</td>
                 <td style={td}>{new Date(m.joined_at).toLocaleDateString()}</td>
+                <td style={td}>
+                  {membershipPill(m.membership_status)}
+                  {!readOnly && m.membership_status !== 'approved' && (
+                    <button
+                      onClick={() => setMembershipStatus(m.id, 'approved')}
+                      disabled={statusBusyId !== null}
+                      style={actionBtn('#16a34a')}
+                    >
+                      {statusBusyId === m.id ? '…' : 'Approve'}
+                    </button>
+                  )}
+                  {!readOnly && m.membership_status === 'pending' && (
+                    <button
+                      onClick={() => setMembershipStatus(m.id, 'rejected')}
+                      disabled={statusBusyId !== null}
+                      style={actionBtn('#dc2626')}
+                    >
+                      Reject
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -233,6 +308,29 @@ function qualityPill(q: QualityRating | null) {
       {q}
     </span>
   )
+}
+
+function membershipPill(s: MembershipStatus) {
+  const colours: Record<MembershipStatus, string> = {
+    approved: '#16a34a',
+    pending: '#f59e0b',
+    rejected: '#dc2626'
+  }
+  return <span style={pill(colours[s])}>{s}</span>
+}
+
+function actionBtn(colour: string): React.CSSProperties {
+  return {
+    marginLeft: '0.4rem',
+    padding: '0.2rem 0.6rem',
+    borderRadius: 6,
+    border: `1px solid ${colour}`,
+    background: '#fff',
+    color: colour,
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    cursor: 'pointer'
+  }
 }
 
 function licensePill(s: LicenseStatus) {

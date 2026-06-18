@@ -7,6 +7,7 @@ export interface MyCentre {
   centre_name: string
   ward: string
   district: string
+  address: string | null
   phone: string
   email: string | null
   children_count: number
@@ -75,7 +76,7 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
   const { data: centreRow } = await supabase
     .from('members')
     .select(
-      'id, centre_name, ward, district, phone, email, children_count, caregiver_count, age_band_0_2, age_band_3_4, age_band_5_6, license_status, license_number, license_expiry, joined_at, latest_quality, org_id'
+      'id, centre_name, ward, district, address, phone, email, children_count, caregiver_count, age_band_0_2, age_band_3_4, age_band_5_6, license_status, license_number, license_expiry, joined_at, latest_quality, org_id'
     )
     .eq('id', memberId)
     .single()

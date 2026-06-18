@@ -16,8 +16,8 @@ export default function RegisterPage() {
             <span className="section-tag">UVIWATA</span>
             <h2>Sajili Kituo Chako · Register Your Centre</h2>
             <p className="section-desc">
-              Jaza fomu hii ili kujiunga na UVIWATA. Utaingia moja kwa moja kwenye portal yako baada ya kujisajili. ·
-              Fill in this form to join UVIWATA. You will be signed in to your portal immediately after submission.
+              Jaza fomu hii ili kujiunga na UVIWATA. Ombi lako litakaguliwa na kuidhinishwa na Sekretarieti kabla ya kuingia kwenye portal. ·
+              Fill in this form to join UVIWATA. Your registration will be reviewed and approved by the secretariat before you can sign in to your portal.
             </p>
           </div>
           <div className="portal-form-card">

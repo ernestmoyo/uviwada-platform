@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { AnnouncementsList } from '@/components/AnnouncementsList'
+import { EditableCentreDetails } from '@/components/EditableCentreDetails'
 import { LicenseCard } from '@/components/LicenseCard'
 import { MembershipStatusPill } from '@/components/membership/MembershipStatusPill'
 import { PortalNav } from '@/components/PortalNav'
@@ -136,41 +137,21 @@ export default async function PortalPage() {
                 <AnnouncementsList items={snapshot.announcements} />
               </section>
 
-              <section>
-                <h2 style={{ fontSize: '1.15rem', marginBottom: '0.75rem' }}>Centre Details · Maelezo ya Kituo</h2>
-                <div
-                  style={{
-                    background: '#fff',
-                    borderRadius: 12,
-                    padding: '1.25rem',
-                    boxShadow: 'var(--shadow)',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '1rem'
-                  }}
-                >
-                  <Detail label="Phone · Simu" value={centre.phone} />
-                  <Detail label="Email" value={centre.email ?? '—'} />
-                  <Detail label="Caregivers · Walezi" value={String(centre.caregiver_count)} />
-                  <Detail label="License #" value={centre.license_number ?? '—'} />
-                  <Detail label="License Expiry" value={centre.license_expiry ?? '—'} />
-                </div>
-              </section>
+              <EditableCentreDetails
+                centre={{
+                  phone: centre.phone,
+                  email: centre.email,
+                  address: centre.address,
+                  caregiver_count: centre.caregiver_count,
+                  license_status: centre.license_status,
+                  license_number: centre.license_number,
+                  license_expiry: centre.license_expiry
+                }}
+              />
             </>
           )}
         </div>
       </main>
     </>
-  )
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '0.95rem', fontWeight: 500, marginTop: '0.15rem' }}>{value}</div>
-    </div>
   )
 }
