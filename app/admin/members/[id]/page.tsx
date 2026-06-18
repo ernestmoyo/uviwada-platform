@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { fmtNum, fmtDate } from '@/lib/format'
 import { notFound, redirect } from 'next/navigation'
 
 import { AdminNav } from '@/components/AdminNav'
@@ -52,7 +53,7 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
                 <MembershipBadge status={member.membership_status} />
                 <ProfileBadge status={member.profile_public_status} />
                 <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                  {member.ward} · {member.district} · joined {new Date(member.joined_at).toLocaleDateString()}
+                  {member.ward} · {member.district} · joined {fmtDate(member.joined_at)}
                 </span>
               </div>
             </div>
@@ -119,9 +120,9 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
                   <tbody>
                     {payments.map((p) => (
                       <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={ptd}>{new Date(p.payment_date).toLocaleDateString()}</td>
+                        <td style={ptd}>{fmtDate(p.payment_date)}</td>
                         <td style={ptd}>
-                          {p.currency} {Number(p.amount).toLocaleString()}
+                          {p.currency} {fmtNum(Number(p.amount))}
                         </td>
                         <td style={ptd}>{p.method.replace('_', ' ')}</td>
                         <td style={ptd}>{p.reference_number}</td>

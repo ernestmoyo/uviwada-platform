@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { fmtNum } from '@/lib/format'
 import dynamic from 'next/dynamic'
 
 import { useI18n } from '@/lib/i18n'
@@ -93,7 +94,7 @@ export function CentreProfile({ centre: c, verifiedDate }: { centre: DirectoryCe
                 <Stat label={sw ? 'Wasichana / Wavulana' : 'Girls / Boys'} value={`${c.girls ?? '—'} / ${c.boys ?? '—'}`} />
                 <Stat label={sw ? 'Walezi' : 'Careworkers'} value={c.careworkers == null ? '—' : String(c.careworkers)} />
                 <Stat label={sw ? 'Watoto wenye ulemavu' : 'Children with disabilities'} value={c.disability == null ? '—' : String(c.disability)} />
-                <Stat label={sw ? 'Ada (TZS/mwezi)' : 'Fee (TZS/month)'} value={c.monthlyFee == null ? '—' : c.monthlyFee.toLocaleString()} />
+                <Stat label={sw ? 'Ada (TZS/mwezi)' : 'Fee (TZS/month)'} value={c.monthlyFee == null ? '—' : fmtNum(c.monthlyFee)} />
                 <Stat
                   label={sw ? 'Usajili (binafsi)' : 'Registration (self-reported)'}
                   value={c.registration ? shorten(c.registration) : '—'}

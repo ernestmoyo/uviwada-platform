@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { fmtNum } from '@/lib/format'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
@@ -233,11 +234,11 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
             <Bar label={sw ? 'Wavulana' : 'Boys'} value={k.boys} max={Math.max(k.girls, k.boys) || 1} color="#3b82f6" />
             <div className="dash-childrow">
               <div>
-                <span className="dash-childnum">{k.disabilityCount.toLocaleString()}</span>
+                <span className="dash-childnum">{fmtNum(k.disabilityCount)}</span>
                 <span className="dash-childlbl">{sw ? 'watoto wenye ulemavu' : 'children with disabilities'}</span>
               </div>
               <div>
-                <span className="dash-childnum">{k.medianFee == null ? '—' : k.medianFee.toLocaleString()}</span>
+                <span className="dash-childnum">{k.medianFee == null ? '—' : fmtNum(k.medianFee)}</span>
                 <span className="dash-childlbl">{sw ? 'ada ya kati (TZS/mwezi)' : 'median fee (TZS/month)'}</span>
               </div>
             </div>
@@ -260,7 +261,7 @@ function Kpi({ value, label, suffix = '', accent }: { value: number | null; labe
   return (
     <div className="kpi-card">
       <span className="kpi-value" style={accent ? { color: accent } : undefined}>
-        {value == null ? '—' : display.toLocaleString()}
+        {value == null ? '—' : fmtNum(display)}
         {value == null ? '' : suffix}
       </span>
       <span className="kpi-label">{label}</span>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { fmtDate, fmtDateTime } from '@/lib/format'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -69,7 +70,7 @@ export function ApprovalQueue({ members, checkedAt, readOnly = false }: Approval
           Approval Queue {members.length > 0 && <span style={{ color: '#b45309' }}>· {members.length} pending</span>}
         </h2>
         <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-          Last checked {new Date(checkedAt).toLocaleString()}
+          Last checked {fmtDateTime(checkedAt)}
         </span>
       </div>
 
@@ -122,7 +123,7 @@ export function ApprovalQueue({ members, checkedAt, readOnly = false }: Approval
                       </div>
                     </td>
                     <td style={qtd}>{m.email ?? '—'}</td>
-                    <td style={qtd}>{new Date(m.joined_at).toLocaleDateString()}</td>
+                    <td style={qtd}>{fmtDate(m.joined_at)}</td>
                     <td style={qtd}>
                       {m.incomplete ? (
                         <span style={{ color: '#b45309', fontWeight: 600 }} title={m.missing.join(', ')}>

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { fmtDate } from '@/lib/format'
 
 import { AdminNav } from '@/components/AdminNav'
 import { AssessmentForm } from '@/components/AssessmentForm'
@@ -76,7 +77,7 @@ export default async function AdminAssessmentsPage() {
                       <div>
                         <strong style={{ fontSize: '0.85rem' }}>{a.member_name}</strong>
                         <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
-                          {new Date(a.conducted_at).toLocaleDateString()} · {a.source}
+                          {fmtDate(a.conducted_at)} · {a.source}
                         </div>
                       </div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { fmtDate } from '@/lib/format'
 import { redirect } from 'next/navigation'
 
 import { AnnouncementsList } from '@/components/AnnouncementsList'
@@ -48,7 +49,7 @@ export default async function PortalPage() {
                   <span className="section-tag">My Centre · Kituo Changu</span>
                   <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{centre.centre_name}</h1>
                   <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
-                    {centre.ward} · {centre.district} · joined {new Date(centre.joined_at).toLocaleDateString()}
+                    {centre.ward} · {centre.district} · joined {fmtDate(centre.joined_at)}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>

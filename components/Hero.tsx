@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { fmtNum } from '@/lib/format'
 import { useEffect, useRef, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
@@ -85,7 +86,7 @@ export function Hero({ centres, councils, children }: HeroProps) {
         </div>
         <div className="hero-stats" ref={statsRef}>
           <div className="stat">
-            <span className="stat-num">{counts.members.toLocaleString()}</span>
+            <span className="stat-num">{fmtNum(counts.members)}</span>
             <span className="stat-label">{lang === 'sw' ? 'Vituo Vilivyotathminiwa' : 'Centres Assessed'}</span>
           </div>
           <div className="stat">
@@ -93,7 +94,7 @@ export function Hero({ centres, councils, children }: HeroProps) {
             <span className="stat-label">{lang === 'sw' ? 'Halmashauri' : 'Councils'}</span>
           </div>
           <div className="stat">
-            <span className="stat-num">{counts.children.toLocaleString()}</span>
+            <span className="stat-num">{fmtNum(counts.children)}</span>
             <span>+</span>
             <span className="stat-label">{lang === 'sw' ? 'Watoto Wanaohudumiwa' : 'Children Served'}</span>
           </div>

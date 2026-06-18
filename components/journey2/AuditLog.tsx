@@ -1,4 +1,5 @@
 import type { StatusLogEntry } from '@/lib/journey2-data'
+import { fmtDateTime } from '@/lib/format'
 
 interface AuditLogProps {
   title: string
@@ -19,7 +20,7 @@ export function AuditLog({ title, entries }: AuditLogProps) {
                 <strong>{e.from_status ?? '—'}</strong> → <strong>{e.to_status}</strong>
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
-                {new Date(e.created_at).toLocaleString()} · {e.actor_name ?? 'system'}
+                {fmtDateTime(e.created_at)} · {e.actor_name ?? 'system'}
               </div>
               {e.note && <div style={{ fontSize: '0.82rem', marginTop: '0.2rem', fontStyle: 'italic' }}>“{e.note}”</div>}
             </li>

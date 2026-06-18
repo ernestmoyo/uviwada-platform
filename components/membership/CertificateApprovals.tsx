@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { fmtDate } from '@/lib/format'
 
 import { useI18n } from '@/lib/i18n'
 
@@ -22,7 +23,7 @@ interface CertItem {
 function fmt(iso: string | null): string {
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleDateString()
+    return fmtDate(iso)
   } catch {
     return ''
   }

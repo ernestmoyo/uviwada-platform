@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { fmtNum, fmtDate } from '@/lib/format'
 import Link from 'next/link'
 
 import { AdminNav } from '@/components/AdminNav'
@@ -64,14 +65,14 @@ export default async function AdminPaymentsPage() {
                   <tbody>
                     {payments.map((p) => (
                       <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={td}>{new Date(p.payment_date).toLocaleDateString()}</td>
+                        <td style={td}>{fmtDate(p.payment_date)}</td>
                         <td style={td}>
                           <Link href={`/admin/members/${p.member_id}`} style={{ color: 'var(--primary)' }}>
                             {p.centre_name}
                           </Link>
                         </td>
                         <td style={td}>
-                          {p.currency} {Number(p.amount).toLocaleString()}
+                          {p.currency} {fmtNum(Number(p.amount))}
                         </td>
                         <td style={td}>{p.method.replace('_', ' ')}</td>
                         <td style={td}>{p.reference_number}</td>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n'
+import { fmtNum } from '@/lib/format'
 
 interface RegionalStructureProps {
   centres: number
@@ -60,7 +61,7 @@ export function RegionalStructure({ centres, councils, children }: RegionalStruc
                 <span className="reg-stat-label">{sw ? 'Halmashauri' : 'Councils'}</span>
               </div>
               <div className="reg-stat">
-                <span className="reg-stat-value">{children.toLocaleString()}</span>
+                <span className="reg-stat-value">{fmtNum(children)}</span>
                 <span className="reg-stat-label">{sw ? 'Watoto' : 'Children'}</span>
               </div>
             </div>

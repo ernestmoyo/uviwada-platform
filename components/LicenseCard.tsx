@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n'
+import { fmtDate } from '@/lib/format'
 
 interface LicenseCardProps {
   status: string
@@ -70,7 +71,7 @@ export function LicenseCard({ status, number, expiry }: LicenseCardProps) {
         {number ? (
           <>
             #{number}
-            {expiryDate ? ` · ${lang === 'sw' ? 'inakwisha' : 'expires'} ${expiryDate.toLocaleDateString()}` : ''}
+            {expiryDate ? ` · ${lang === 'sw' ? 'inakwisha' : 'expires'} ${fmtDate(expiryDate)}` : ''}
           </>
         ) : (
           <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>

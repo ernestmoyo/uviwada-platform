@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { fmtDate } from '@/lib/format'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -259,8 +260,8 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
                 <td style={{ ...td, textAlign: 'right' }}>{m.children_count}</td>
                 <td style={td}>{qualityPill(m.latest_quality)}</td>
                 <td style={td}>{licensePill(m.license_status)}</td>
-                <td style={td}>{m.license_expiry ? new Date(m.license_expiry).toLocaleDateString() : '—'}</td>
-                <td style={td}>{new Date(m.joined_at).toLocaleDateString()}</td>
+                <td style={td}>{m.license_expiry ? fmtDate(m.license_expiry) : '—'}</td>
+                <td style={td}>{fmtDate(m.joined_at)}</td>
                 <td style={td}>
                   {membershipPill(m.membership_status)}
                   {!readOnly && m.membership_status !== 'approved' && (

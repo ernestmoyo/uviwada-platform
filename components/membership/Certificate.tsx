@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { fmtDate } from '@/lib/format'
 import { useEffect, useState } from 'react'
 
 interface Props {
@@ -21,7 +22,7 @@ interface CertStatus {
 function fmt(iso: string | null): string {
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleDateString()
+    return fmtDate(iso)
   } catch {
     return ''
   }

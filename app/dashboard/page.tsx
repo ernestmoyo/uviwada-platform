@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { fmtNum } from '@/lib/format'
 
 import { AdminNav } from '@/components/AdminNav'
 import { PrintButton } from '@/components/PrintButton'
@@ -66,7 +67,7 @@ export default async function MEDashboardPage() {
           >
             <Kpi label="Total members" value={stats.total_members} />
             <Kpi label="Active centres" value={stats.active_centres} />
-            <Kpi label="Children enrolled" value={stats.total_children.toLocaleString()} />
+            <Kpi label="Children enrolled" value={fmtNum(stats.total_children)} />
             <Kpi label="Avg quality (Green)" value={`${stats.pct_green}%`} accent="#22c55e" />
             <Kpi label="Trainings attended" value={stats.trainings_attended} />
             <Kpi label="Licence compliance" value={`${Math.round(((stats.total_members - stats.expired_licences) / Math.max(1, stats.total_members)) * 100)}%`} />
@@ -91,7 +92,7 @@ export default async function MEDashboardPage() {
               NMECDP-aligned indicators (indicative)
             </h3>
             <div style={{ display: 'grid', gap: '0.5rem' }}>
-              <Indicator label="Access for under-6 children (proxy: enrolled)" status="green" value={`${stats.total_children.toLocaleString()} enrolled`} />
+              <Indicator label="Access for under-6 children (proxy: enrolled)" status="green" value={`${fmtNum(stats.total_children)} enrolled`} />
               <Indicator label="Licence compliance" status={stats.expired_licences === 0 ? 'green' : 'amber'} value={`${Math.round(((stats.total_members - stats.expired_licences) / Math.max(1, stats.total_members)) * 100)}%`} />
               <Indicator label="Quality rating — green centres" status={stats.pct_green > 50 ? 'green' : 'amber'} value={`${stats.pct_green}%`} />
               <Indicator label="Quality rating — centres needing support" status={stats.pct_red > 20 ? 'red' : stats.pct_red > 5 ? 'amber' : 'green'} value={`${stats.pct_amber + stats.pct_red}% amber/red`} />

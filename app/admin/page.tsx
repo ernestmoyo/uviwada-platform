@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { fmtNum } from '@/lib/format'
 import { redirect } from 'next/navigation'
 
 import { AdminNav } from '@/components/AdminNav'
@@ -57,7 +58,7 @@ export default async function AdminOverviewPage() {
           >
             <Kpi label="Total members" value={stats.total_members} />
             <Kpi label="Active centres" value={stats.active_centres} />
-            <Kpi label="Children enrolled" value={stats.total_children.toLocaleString()} />
+            <Kpi label="Children enrolled" value={fmtNum(stats.total_children)} />
             <Kpi label="Quality green" value={`${stats.pct_green}%`} accent="#22c55e" />
             <Kpi label="Quality amber" value={`${stats.pct_amber}%`} accent="#f59e0b" />
             <Kpi label="Quality red" value={`${stats.pct_red}%`} accent="#ef4444" />
