@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { TopBar } from '@/components/TopBar'
 import { DirectoryExplorer } from '@/components/directory/DirectoryExplorer'
 import { fetchRubricSnapshot } from '@/lib/rubric-data'
 import { buildDirectory } from '@/lib/directory'
@@ -20,6 +21,7 @@ export default async function DirectoryPage() {
 
   return (
     <main style={{ background: 'var(--bg-alt)', minHeight: '100vh' }}>
+      <TopBar />
       <header style={{ background: 'var(--primary-dark)', color: '#fff', padding: '1.4rem 0' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
