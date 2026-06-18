@@ -13,8 +13,8 @@ export const SEED_USER_PRESETS = [
   {
     id: '00000000-0000-0000-0000-000000000102',
     role: 'assessor' as const,
-    label_sw: 'Mtathmini wa Kinondoni',
-    label_en: 'Kinondoni Assessor'
+    label_sw: 'Mtathmini wa Ubora',
+    label_en: 'Quality Assessor'
   },
   {
     id: '00000000-0000-0000-0000-000000000103',

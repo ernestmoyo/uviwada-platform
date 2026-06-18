@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import type { AdminMember, MembershipStatus } from '@/lib/admin-data'
@@ -248,7 +249,9 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
             {filtered.map((m) => (
               <tr key={m.id} style={{ borderTop: '1px solid var(--border)' }}>
                 <td style={td}>
-                  <strong>{m.centre_name}</strong>
+                  <Link href={`/admin/members/${m.id}`} style={{ color: 'var(--primary-dark)', fontWeight: 700 }}>
+                    {m.centre_name}
+                  </Link>
                   <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{m.phone}</div>
                 </td>
                 <td style={td}>{m.ward}</td>
@@ -270,13 +273,9 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
                     </button>
                   )}
                   {!readOnly && m.membership_status === 'pending' && (
-                    <button
-                      onClick={() => setMembershipStatus(m.id, 'rejected')}
-                      disabled={statusBusyId !== null}
-                      style={actionBtn('#dc2626')}
-                    >
-                      Reject
-                    </button>
+                    <Link href={`/admin/members/${m.id}`} style={{ ...actionBtn('#dc2626'), textDecoration: 'none' }}>
+                      Review
+                    </Link>
                   )}
                 </td>
               </tr>

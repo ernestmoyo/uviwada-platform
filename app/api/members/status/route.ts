@@ -3,24 +3,21 @@ import { z } from 'zod'
 
 import { getCurrentUser } from '@/lib/auth'
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase/server'
+import { changeMembershipStatus } from '@/lib/membership-service'
 
-// Secretariat approval of a pending centre registration (Issue 3).
-// Only write-capable staff (secretariat / admin) may change a centre's
-// membership_status. cic_staff is read-only and members cannot reach here.
+// Secretariat approval of a centre's MEMBERSHIP status (state machine 1).
+// All work goes through the transition service, which validates the move is
+// legal, writes the audit log, and dispatches the member notification.
 const bodySchema = z.object({
   member_id: z.string().uuid(),
-  status: z.enum(['approved', 'rejected', 'pending'])
+  status: z.enum(['approved', 'rejected', 'pending']),
+  note: z.string().max(2000).optional()
 })
-
-const WRITE_ROLES = new Set(['secretariat', 'admin'])
 
 export async function POST(request: Request) {
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
-  }
-  if (!WRITE_ROLES.has(user.role)) {
-    return NextResponse.json({ error: 'You are not allowed to approve registrations' }, { status: 403 })
   }
 
   const parsed = bodySchema.safeParse(await request.json())
@@ -37,15 +34,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
   }
 
-  const { error } = await supabase
-    .from('members')
-    .update({ membership_status: parsed.data.status })
-    .eq('id', parsed.data.member_id)
-
-  if (error) {
-    console.error('members/status: failed', error)
-    return NextResponse.json({ error: 'Could not update status. Please try again.' }, { status: 500 })
+  const result = await changeMembershipStatus(
+    supabase,
+    parsed.data.member_id,
+    parsed.data.status,
+    { id: user.id, role: user.role },
+    parsed.data.note
+  )
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status ?? 400 })
   }
-
   return NextResponse.json({ ok: true, status: parsed.data.status })
 }

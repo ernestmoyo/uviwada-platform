@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { AdminNav } from '@/components/AdminNav'
+import { ApprovalQueue } from '@/components/journey2/ApprovalQueue'
 import { fetchTenantStats } from '@/lib/admin-data'
+import { fetchPendingQueue } from '@/lib/journey2-data'
 import { getCurrentUser } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
 import { getCurrentTenant } from '@/lib/tenant'
@@ -18,6 +20,8 @@ export default async function AdminOverviewPage() {
 
   const tenant = getCurrentTenant()
   const stats = await fetchTenantStats(tenant.id)
+  const queue = await fetchPendingQueue(tenant.id)
+  const canModerate = user.role === 'secretariat' || user.role === 'admin'
 
   const roleLabel =
     user.role === 'admin'
@@ -40,6 +44,8 @@ export default async function AdminOverviewPage() {
               {stats.total_members} members across {stats.by_ward.length} wards in {stats.by_district.length} districts
             </div>
           </div>
+
+          {canModerate && <ApprovalQueue members={queue} checkedAt={new Date().toISOString()} />}
 
           <div
             style={{

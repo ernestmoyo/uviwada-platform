@@ -25,6 +25,7 @@ interface NavLink {
 const ALL_LINKS = {
   overview: { href: '/admin', sw: 'Dashibodi', en: 'Overview' },
   members: { href: '/admin/members', sw: 'Wanachama', en: 'Members' },
+  payments: { href: '/admin/payments', sw: 'Malipo', en: 'Payments' },
   trainings: { href: '/admin/trainings', sw: 'Mafunzo', en: 'Trainings' },
   assessments: { href: '/admin/assessments', sw: 'Tathmini', en: 'Assessments' },
   announcements: { href: '/admin/announcements', sw: 'Matangazo', en: 'Announcements' },
@@ -38,6 +39,7 @@ function linksForRole(role: DemoRole): NavLink[] {
       return [
         ALL_LINKS.overview,
         ALL_LINKS.members,
+        ALL_LINKS.payments,
         ALL_LINKS.trainings,
         ALL_LINKS.assessments,
         ALL_LINKS.announcements,
@@ -48,6 +50,7 @@ function linksForRole(role: DemoRole): NavLink[] {
       return [
         ALL_LINKS.overview,
         ALL_LINKS.members,
+        ALL_LINKS.payments,
         ALL_LINKS.trainings,
         ALL_LINKS.assessments,
         ALL_LINKS.announcements,
