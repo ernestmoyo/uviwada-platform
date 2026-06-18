@@ -21,6 +21,7 @@ const bodySchema = z.object({
   gps_lat: z.number().nullable().optional(),
   gps_lng: z.number().nullable().optional(),
   comments: z.string().nullable().optional(),
+  photo_urls: z.array(z.string()).optional(),
   source: z.enum(['web', 'apk_synced']).default('web')
 })
 
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
       formalization_pathway: tierDef?.pathway ?? null,
       assessor_comments: payload.comments ?? null,
       source: payload.source,
-      raw: { capacity: payload.capacity, infra: payload.infra, entered_by: user.id }
+      raw: { capacity: payload.capacity, infra: payload.infra, entered_by: user.id, photo_urls: payload.photo_urls ?? [] }
     })
     .select('id')
     .single()

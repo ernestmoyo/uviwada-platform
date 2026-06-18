@@ -5,10 +5,21 @@ import { useMemo, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 import type { DirectoryCentre } from '@/lib/directory'
+import { RubricMap } from '@/components/quality/RubricMap'
 
 type SortKey = 'name' | 'tier' | 'enrolment'
 
 const TIER_ORDER: Record<string, number> = { 'Level 4': 0, 'Level 3': 1, 'Level 2': 2, Pending: 3 }
+
+function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const R = 6371
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(s))
+}
 
 interface Props {
   centres: DirectoryCentre[]
@@ -26,6 +37,19 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
   const [ownership, setOwnership] = useState('All')
   const [tier, setTier] = useState('All')
   const [sort, setSort] = useState<SortKey>('name')
+  const [view, setView] = useState<'list' | 'map'>('list')
+  const [near, setNear] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+
+  function findNearMe() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setNear({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocating(false) },
+      () => setLocating(false),
+      { timeout: 8000, enableHighAccuracy: true }
+    )
+  }
 
   const wardOptions = useMemo(() => {
     const subset = council === 'All' ? centres : centres.filter((c) => c.council === council)
@@ -46,11 +70,26 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
       return true
     })
     const sorted = [...filtered]
-    if (sort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name))
+    if (near) {
+      // "Near me": nearest first; centres without coordinates sink to the bottom.
+      sorted.sort((a, b) => {
+        const da = a.lat != null && a.lng != null ? distanceKm(near, { lat: a.lat, lng: a.lng }) : Infinity
+        const db = b.lat != null && b.lng != null ? distanceKm(near, { lat: b.lat, lng: b.lng }) : Infinity
+        return da - db
+      })
+    } else if (sort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name))
     else if (sort === 'enrolment') sorted.sort((a, b) => (b.children ?? 0) - (a.children ?? 0))
     else sorted.sort((a, b) => (TIER_ORDER[a.tierShort] ?? 9) - (TIER_ORDER[b.tierShort] ?? 9) || a.name.localeCompare(b.name))
     return sorted
-  }, [centres, q, council, ward, ownership, tier, sort])
+  }, [centres, q, council, ward, ownership, tier, sort, near])
+
+  const mapPoints = useMemo(
+    () =>
+      results
+        .filter((c) => c.lat != null && c.lng != null)
+        .map((c) => ({ name: c.name, lat: c.lat as number, lng: c.lng as number, council: c.council, tier: c.tier, traffic: c.traffic })),
+    [results]
+  )
 
   return (
     <div>
@@ -92,29 +131,75 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
         {sw ? 'Inaonyesha' : 'Showing'} <strong>{results.length}</strong> {sw ? 'kati ya' : 'of'} {centres.length} {sw ? 'vituo' : 'centres'}
       </p>
 
-      <div className="dir-grid">
-        {results.map((c) => (
-          <Link key={c.slug} href={`/centre/${c.slug}`} className="dir-card">
-            <div className="dir-card-top">
-              <span className={`dir-tier tier-${c.traffic}`}>{c.scored ? c.tierShort : sw ? 'Inasubiri' : 'Pending'}</span>
-              {c.ownership && <span className="dir-own">{c.ownership}</span>}
-            </div>
-            <h3>{c.name}</h3>
-            <p className="dir-loc">📍 {c.ward ? `${c.ward}, ` : ''}{c.council ?? 'Dar es Salaam'}</p>
-            <div className="dir-meta">
-              {c.children != null && (
-                <span>{c.children} {sw ? 'watoto' : 'children'}</span>
-              )}
-              {c.careworkers != null && (
-                <span>{c.careworkers} {sw ? 'walezi' : 'staff'}</span>
-              )}
-            </div>
-            <span className="dir-view">{sw ? 'Tazama wasifu →' : 'View profile →'}</span>
-          </Link>
-        ))}
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', margin: '0 0 1rem' }}>
+        <div style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+          {(['list', 'map'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              style={{
+                padding: '0.4rem 0.95rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+                background: view === v ? 'var(--primary, #1A5FAA)' : '#fff', color: view === v ? '#fff' : 'var(--muted)'
+              }}
+            >
+              {v === 'list' ? (sw ? 'Orodha' : 'List') : (sw ? 'Ramani' : 'Map')}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={findNearMe}
+          style={{
+            padding: '0.4rem 0.95rem', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+            background: near ? 'var(--primary-light, #2B7AD4)' : '#fff', color: near ? '#fff' : 'var(--primary-dark, #0F3D6E)'
+          }}
+        >
+          📍 {locating ? (sw ? 'Inatafuta…' : 'Locating…') : near ? (sw ? 'Karibu nawe ✓' : 'Near me ✓') : (sw ? 'Karibu nawe' : 'Near me')}
+        </button>
+        {near && (
+          <button type="button" onClick={() => setNear(null)} style={{ background: 'none', border: 'none', color: 'var(--link, #2B7AD4)', cursor: 'pointer', fontSize: '0.82rem' }}>
+            {sw ? 'Ondoa' : 'Clear'}
+          </button>
+        )}
       </div>
 
-      {results.length === 0 && (
+      {view === 'map' ? (
+        mapPoints.length > 0 ? (
+          <div className="u-card" style={{ overflow: 'hidden', marginBottom: '1rem' }}>
+            <RubricMap points={mapPoints} />
+          </div>
+        ) : (
+          <p className="dir-empty">{sw ? 'Hakuna vituo vyenye eneo la ramani.' : 'No centres with map coordinates to show.'}</p>
+        )
+      ) : (
+        <div className="dir-grid">
+          {results.map((c) => {
+            const dist = near && c.lat != null && c.lng != null ? distanceKm(near, { lat: c.lat, lng: c.lng }) : null
+            return (
+              <Link key={c.slug} href={`/centre/${c.slug}`} className="dir-card">
+                <div className="dir-card-top">
+                  <span className={`dir-tier tier-${c.traffic}`}>{c.scored ? c.tierShort : sw ? 'Inasubiri' : 'Pending'}</span>
+                  {c.ownership && <span className="dir-own">{c.ownership}</span>}
+                </div>
+                <h3>{c.name}</h3>
+                <p className="dir-loc">📍 {c.ward ? `${c.ward}, ` : ''}{c.council ?? 'Dar es Salaam'}{dist != null ? ` · ${dist.toFixed(1)} km` : ''}</p>
+                <div className="dir-meta">
+                  {c.children != null && (
+                    <span>{c.children} {sw ? 'watoto' : 'children'}</span>
+                  )}
+                  {c.careworkers != null && (
+                    <span>{c.careworkers} {sw ? 'walezi' : 'staff'}</span>
+                  )}
+                </div>
+                <span className="dir-view">{sw ? 'Tazama wasifu →' : 'View profile →'}</span>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+
+      {view === 'list' && results.length === 0 && (
         <p className="dir-empty">{sw ? 'Hakuna vituo vinavyolingana na utafutaji wako.' : 'No centres match your search.'}</p>
       )}
     </div>

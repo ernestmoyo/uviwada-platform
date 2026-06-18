@@ -41,9 +41,19 @@ export default async function AdminAssessmentsPage() {
 
           <aside>
             <div style={{ background: '#fff', borderRadius: 12, padding: '1.25rem', boxShadow: 'var(--shadow)' }}>
-              <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.85rem 0', color: 'var(--primary-dark)' }}>
-                Recent assessments ({assessments.length})
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.85rem 0' }}>
+                <h3 style={{ fontSize: '0.95rem', margin: 0, color: 'var(--primary-dark)' }}>
+                  Recent assessments ({assessments.length})
+                </h3>
+                <a
+                  href="/api/assessments/export"
+                  download
+                  style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--primary, #1A5FAA)', textDecoration: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '0.3rem 0.55rem', whiteSpace: 'nowrap' }}
+                  title="Download all quality assessments as CSV for analysis"
+                >
+                  ⬇ Export CSV
+                </a>
+              </div>
               <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
                 {assessments.length === 0 && (
                   <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No assessments yet.</p>

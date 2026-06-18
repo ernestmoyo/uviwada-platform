@@ -32,6 +32,7 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
   const [infra, setInfra] = useState<Levels>({})
   const [comments, setComments] = useState('')
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null)
+  const [photos, setPhotos] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -58,10 +59,21 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
     setError(null)
     setSuccess(null)
     try {
+      // Upload any captured photos first; collect their public URLs.
+      let photo_urls: string[] = []
+      if (photos.length) {
+        const fd = new FormData()
+        photos.forEach((p, i) => fd.append(`photo_${i}`, p))
+        const up = await fetch('/api/assessments/photos', { method: 'POST', body: fd })
+        if (up.ok) {
+          const uj = (await up.json().catch(() => ({}))) as { urls?: string[] }
+          photo_urls = uj.urls ?? []
+        }
+      }
       const res = await fetch('/api/rubric-assessments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: memberId, capacity, infra, comments: comments || null, gps_lat: gps?.lat ?? null, gps_lng: gps?.lng ?? null })
+        body: JSON.stringify({ member_id: memberId, capacity, infra, comments: comments || null, gps_lat: gps?.lat ?? null, gps_lng: gps?.lng ?? null, photo_urls })
       })
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; tier?: string; error?: string; detail?: string }
       if (!res.ok) {
@@ -71,6 +83,7 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
         setCapacity({})
         setInfra({})
         setComments('')
+        setPhotos([])
         router.refresh()
       }
     } catch {
@@ -113,6 +126,24 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
       <div className="form-group" style={{ marginTop: '1rem' }}>
         <label htmlFor="comments">{lang === 'sw' ? 'Maoni ya mtathmini' : 'Assessor comments'}</label>
         <textarea id="comments" rows={3} value={comments} onChange={(e) => setComments(e.target.value)} style={{ width: '100%', padding: '0.5rem 0.7rem', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit' }} />
+      </div>
+
+      <div className="form-group" style={{ marginTop: '1rem' }}>
+        <label htmlFor="photos">{lang === 'sw' ? 'Picha za kituo' : 'Centre photos'}</label>
+        <input
+          id="photos"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          multiple
+          onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
+          style={{ display: 'block', marginTop: '0.25rem', fontSize: '0.9rem' }}
+        />
+        <p style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
+          {photos.length > 0
+            ? (lang === 'sw' ? `Picha ${photos.length} zimechaguliwa` : `${photos.length} photo(s) selected`)
+            : (lang === 'sw' ? 'Piga picha ya jengo (hiari)' : 'Capture a photo of the premises (optional)')}
+        </p>
       </div>
 
       {gps && <p style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>GPS captured: {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}</p>}
