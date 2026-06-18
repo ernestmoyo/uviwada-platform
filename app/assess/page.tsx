@@ -18,9 +18,8 @@ export default async function AssessPage() {
 
   const tenantId = getCurrentTenantId()
   const members = await fetchMembersForOrg(tenantId)
-  const assignedMembers = user.ward
-    ? members.filter((m) => m.ward === user.ward)
-    : members
+  // Assessors can assess ANY registered centre, not only their home ward.
+  const assignedMembers = members
 
   return (
     <>
@@ -28,12 +27,10 @@ export default async function AssessPage() {
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 60px)', padding: '1.5rem 0' }}>
         <div className="container" style={{ maxWidth: 720 }}>
           <span className="section-tag">On-site Quality Assessment</span>
-          <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>
-            {user.ward ? `${user.ward} ward` : 'All centres'}
-          </h1>
+          <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>All centres</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            {assignedMembers.length} centre{assignedMembers.length === 1 ? '' : 's'} in your scope. Tap each item;
-            the rating updates live. Works fully offline once installed.
+            {assignedMembers.length} registered centre{assignedMembers.length === 1 ? '' : 's'} available to assess. Pick a
+            centre, tap each item; the rating updates live. Works fully offline once installed.
           </p>
 
           <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>

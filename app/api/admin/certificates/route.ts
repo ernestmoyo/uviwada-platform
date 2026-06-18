@@ -22,7 +22,12 @@ export async function GET() {
     .in('status', ['requested', 'issued'])
     .order('requested_at', { ascending: false })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Before migration 0006 is applied the table doesn't exist — degrade to an
+    // empty queue instead of erroring the admin page.
+    console.error('certificates: list failed (is migration 0006 applied?)', error.message)
+    return NextResponse.json({ items: [] })
+  }
 
   type Row = {
     id: string; member_id: string; status: string; cert_ref: string | null; period_label: string | null
