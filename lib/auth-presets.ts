@@ -7,8 +7,8 @@ export const SEED_USER_PRESETS = [
   {
     id: '00000000-0000-0000-0000-000000000101',
     role: 'secretariat' as const,
-    label_sw: 'Sekretarieti UVIWADA',
-    label_en: 'UVIWADA Secretariat'
+    label_sw: 'Sekretarieti UVIWATA',
+    label_en: 'UVIWATA Secretariat'
   },
   {
     id: '00000000-0000-0000-0000-000000000102',

@@ -33,7 +33,9 @@ export default async function AdminOverviewPage() {
         <div className="container">
           <div style={{ marginBottom: '1.5rem' }}>
             <span className="section-tag">{roleLabel}</span>
-            <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>{tenant.label_en}</h1>
+            <h1 style={{ fontSize: '1.75rem', margin: '0.4rem 0 0.2rem 0' }}>
+              {tenant.label_en.replace('UVIWADA', 'UVIWATA')}
+            </h1>
             <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
               {stats.total_members} members across {stats.by_ward.length} wards in {stats.by_district.length} districts
             </div>

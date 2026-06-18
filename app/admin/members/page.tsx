@@ -42,7 +42,7 @@ export default async function AdminMembersPage({ searchParams }: AdminMembersPag
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 110px)', padding: '2rem 0' }}>
         <div className="container">
           <div style={{ marginBottom: '1.5rem' }}>
-            <span className="section-tag">{tenant.label_en}</span>
+            <span className="section-tag">{tenant.label_en.replace('UVIWADA', 'UVIWATA')}</span>
             <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>Members · {members.length}</h1>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem', margin: 0 }}>
               Filter by ward, quality rating, or license status. Export filtered set as CSV for donor reporting.

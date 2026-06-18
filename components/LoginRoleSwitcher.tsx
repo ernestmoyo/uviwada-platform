@@ -105,7 +105,7 @@ export function LoginRoleSwitcher({ memberOptions }: LoginRoleSwitcherProps) {
           : 'UVIWATA platform demo. No password required.'}
       </p>
 
-      <h4 style={sectionHeader}>{lang === 'sw' ? 'Sekretarieti ya UVIWADA (Dar es Salaam)' : 'UVIWADA Secretariat (Dar es Salaam)'}</h4>
+      <h4 style={sectionHeader}>{lang === 'sw' ? 'Sekretarieti ya UVIWATA (Dar es Salaam)' : 'UVIWATA Secretariat (Dar es Salaam)'}</h4>
       <div style={{ display: 'grid', gap: '0.5rem' }}>
         {SEED_USER_PRESETS.map((u) => (
           <button
