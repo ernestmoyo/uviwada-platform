@@ -30,7 +30,7 @@ export default async function AdminAssessmentsPage() {
         <div className="container" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
           <div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <span className="section-tag">{tenant.label_en}</span>
+              <span className="section-tag">{tenant.label_en.replace('UVIWADA', 'UVIWATA')}</span>
               <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>Record an assessment</h1>
               <p style={{ color: 'var(--muted)', fontSize: '0.9rem', margin: 0 }}>
                 30-item ECCE checklist across 6 dimensions. Score updates the centre&apos;s traffic light immediately.

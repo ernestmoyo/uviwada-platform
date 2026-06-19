@@ -25,7 +25,7 @@ export default async function AdminAnnouncementsPage() {
       <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 110px)', padding: '2rem 0' }}>
         <div className="container">
           <div style={{ marginBottom: '1.5rem' }}>
-            <span className="section-tag">{tenant.label_en}</span>
+            <span className="section-tag">{tenant.label_en.replace('UVIWADA', 'UVIWATA')}</span>
             <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>Announcements</h1>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem', margin: 0 }}>
               Broadcast bilingual announcements to all members in this tenant. Visible on every member portal within seconds.

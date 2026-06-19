@@ -30,7 +30,7 @@ export default async function MEDashboardPage() {
         <div className="container">
           <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <span className="section-tag">M&amp;E Dashboard · {tenant.label_en}</span>
+              <span className="section-tag">M&amp;E Dashboard · {tenant.label_en.replace('UVIWADA', 'UVIWATA')}</span>
               <h1 style={{ fontSize: '1.5rem', margin: '0.4rem 0 0.2rem 0' }}>
                 Programme Performance — {stats.total_members} centres tracked
               </h1>

@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { getSupabaseAdmin, isSupabaseConfigured } from './supabase/server'
+import { isNationalTenant } from './tenant-presets'
 import type { MembershipStatus, ProfilePublicStatus, SectionStatus } from './membership-service'
 
 export interface MemberDetail {
@@ -159,12 +160,11 @@ export async function fetchPendingQueue(orgId: string): Promise<QueueMember[]> {
   if (!isSupabaseConfigured()) return []
   const supabase = getSupabaseAdmin()
   if (!supabase) return []
-  const { data } = await supabase
+  let queueQ = supabase
     .from('members')
     .select('id, centre_name, email, phone, ward, district, address, license_number, license_status, joined_at, membership_status')
-    .eq('org_id', orgId)
-    .eq('membership_status', 'pending')
-    .order('joined_at', { ascending: false })
+  if (!isNationalTenant(orgId)) queueQ = queueQ.eq('org_id', orgId)
+  const { data } = await queueQ.eq('membership_status', 'pending').order('joined_at', { ascending: false })
   const rows = (data ?? []) as Array<{
     id: string
     centre_name: string
@@ -210,6 +210,6 @@ export async function fetchRecentPayments(orgId: string, limit = 50): Promise<Ar
       return mem ? { row: r, mem } : null
     })
     .filter((x): x is { row: Joined; mem: { centre_name: string; org_id: string } } => !!x)
-    .filter((x) => x.mem.org_id === orgId)
+    .filter((x) => isNationalTenant(orgId) || x.mem.org_id === orgId)
     .map((x) => ({ ...x.row, centre_name: x.mem.centre_name }))
 }

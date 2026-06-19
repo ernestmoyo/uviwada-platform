@@ -28,3 +28,11 @@ export const TENANT_PRESETS = [
 ] as const
 
 export const DEFAULT_TENANT_ID = TENANT_PRESETS[0].id
+
+export const NATIONAL_TENANT_ID = '00000000-0000-0000-0000-000000000010'
+
+// The national/federation tenant aggregates every region's data, so admin
+// queries for it must NOT filter by a single org_id — they span all orgs.
+export function isNationalTenant(orgId: string): boolean {
+  return TENANT_PRESETS.some((t) => t.id === orgId && t.scope === 'national')
+}

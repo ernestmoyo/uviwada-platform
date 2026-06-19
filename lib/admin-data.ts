@@ -5,7 +5,11 @@ import {
   DEMO_TRAININGS,
   listDemoMembersForOrg
 } from './demo-fallback'
+import { isNationalTenant } from './tenant-presets'
 import type { LicenseStatus, QualityRating } from './types/database'
+
+// The national tenant aggregates every region, so its admin queries must span
+// all orgs (no org_id filter). Regional tenants filter to their own org.
 
 export type MembershipStatus = 'pending' | 'approved' | 'rejected'
 
@@ -95,16 +99,17 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
   if (!isSupabaseConfigured()) return listDemoMembersForOrg(orgId)
   const supabase = getSupabaseAdmin()
   if (!supabase) return listDemoMembersForOrg(orgId)
+  const national = isNationalTenant(orgId)
   try {
     // Base columns only — does NOT reference membership_status, so the real
     // member list still loads even if migration 0005 hasn't been applied yet.
-    const { data } = await supabase
+    let baseQ = supabase
       .from('members')
       .select(
         'id, centre_name, ward, district, phone, email, children_count, caregiver_count, license_status, license_number, license_expiry, latest_quality, joined_at'
       )
-      .eq('org_id', orgId)
-      .order('centre_name')
+    if (!national) baseQ = baseQ.eq('org_id', orgId)
+    const { data } = await baseQ.order('centre_name')
     const rows = (data ?? []) as Omit<MemberRow, 'membership_status'>[]
     if (rows.length === 0) return listDemoMembersForOrg(orgId)
 
@@ -112,10 +117,9 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
     // (pre-migration), this query yields nothing and every centre defaults to
     // 'approved' so the table still renders normally.
     const statusById = new Map<string, MembershipStatus>()
-    const { data: statusRows } = await supabase
-      .from('members')
-      .select('id, membership_status')
-      .eq('org_id', orgId)
+    let statusQ = supabase.from('members').select('id, membership_status')
+    if (!national) statusQ = statusQ.eq('org_id', orgId)
+    const { data: statusRows } = await statusQ
     ;((statusRows ?? []) as Array<{ id: string; membership_status: MembershipStatus | null }>).forEach((s) => {
       if (s.membership_status) statusById.set(s.id, s.membership_status)
     })
@@ -131,11 +135,11 @@ export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining
   const supabase = getSupabaseAdmin()
   if (!supabase) return DEMO_TRAININGS
   try {
-    const { data: trainings } = await supabase
+    let trainingsQ = supabase
       .from('trainings')
       .select('id, title_sw, title_en, category, scheduled_at, location, capacity, facilitator')
-      .eq('org_id', orgId)
-      .order('scheduled_at', { ascending: false })
+    if (!isNationalTenant(orgId)) trainingsQ = trainingsQ.eq('org_id', orgId)
+    const { data: trainings } = await trainingsQ.order('scheduled_at', { ascending: false })
 
     const trs = (trainings ?? []) as Array<Omit<AdminTraining, 'registered_count'>>
     if (trs.length === 0) return DEMO_TRAININGS
@@ -185,7 +189,7 @@ export async function fetchAssessmentsForOrg(orgId: string, limit = 50): Promise
         return memberRow ? { row: r, memberRow } : null
       })
       .filter((x): x is { row: AssessmentJoin; memberRow: { centre_name: string; org_id: string } } => !!x)
-      .filter((x) => x.memberRow.org_id === orgId)
+      .filter((x) => isNationalTenant(orgId) || x.memberRow.org_id === orgId)
       .map((x) => ({
         id: x.row.id,
         member_id: x.row.member_id,
@@ -206,11 +210,11 @@ export async function fetchAnnouncementsForOrg(orgId: string): Promise<AdminAnno
   const supabase = getSupabaseAdmin()
   if (!supabase) return DEMO_ANNOUNCEMENTS
   try {
-    const { data } = await supabase
+    let annQ = supabase
       .from('announcements')
       .select('id, title_sw, title_en, body_sw, body_en, published_at')
-      .eq('org_id', orgId)
-      .order('published_at', { ascending: false })
+    if (!isNationalTenant(orgId)) annQ = annQ.eq('org_id', orgId)
+    const { data } = await annQ.order('published_at', { ascending: false })
     const rows = (data ?? []) as AdminAnnouncement[]
     return rows.length > 0 ? rows : DEMO_ANNOUNCEMENTS
   } catch {
@@ -222,11 +226,13 @@ export async function fetchTenantStats(orgId: string): Promise<AdminTenantStats>
   if (!isSupabaseConfigured()) return buildDemoTenantStats(orgId)
   const supabase = getSupabaseAdmin()
   if (!supabase) return buildDemoTenantStats(orgId)
+  const national = isNationalTenant(orgId)
   try {
-    const { data: memberRows } = await supabase
+    let memberStatsQ = supabase
       .from('members')
       .select('id, ward, district, latest_quality, license_status, license_expiry, children_count, joined_at')
-      .eq('org_id', orgId)
+    if (!national) memberStatsQ = memberStatsQ.eq('org_id', orgId)
+    const { data: memberRows } = await memberStatsQ
     const members = (memberRows ?? []) as Array<{
       id: string
       ward: string
@@ -264,16 +270,15 @@ export async function fetchTenantStats(orgId: string): Promise<AdminTenantStats>
       byDistrict.set(m.district, (byDistrict.get(m.district) ?? 0) + 1)
     }
 
-    // Trainings (upcoming + completed) — query with org filter
+    // Trainings (upcoming + completed) — scoped per tenant (all orgs if national)
     const nowIso = new Date().toISOString()
-    const [{ count: upcoming }, { data: orgTrainings }] = await Promise.all([
-      supabase
-        .from('trainings')
-        .select('id', { count: 'exact', head: true })
-        .eq('org_id', orgId)
-        .gte('scheduled_at', nowIso),
-      supabase.from('trainings').select('id').eq('org_id', orgId)
-    ])
+    let upcomingQ = supabase.from('trainings').select('id', { count: 'exact', head: true }).gte('scheduled_at', nowIso)
+    let allTrainingsQ = supabase.from('trainings').select('id')
+    if (!national) {
+      upcomingQ = upcomingQ.eq('org_id', orgId)
+      allTrainingsQ = allTrainingsQ.eq('org_id', orgId)
+    }
+    const [{ count: upcoming }, { data: orgTrainings }] = await Promise.all([upcomingQ, allTrainingsQ])
     let attended = 0
     if (orgTrainings && orgTrainings.length > 0) {
       const ids = (orgTrainings as Array<{ id: string }>).map((t) => t.id)
