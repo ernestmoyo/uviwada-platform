@@ -30,19 +30,20 @@ export function ApprovalQueue({ members, checkedAt, readOnly = false }: Approval
     })
   }, [members, incompleteOnly, from, to])
 
-  async function quickApprove(id: string) {
+  async function setStatus(id: string, status: 'approved' | 'rejected') {
     if (busyId) return
+    if (status === 'rejected' && !window.confirm('Reject this registration? The centre will be blocked from the member portal until re-approved.')) return
     setBusyId(id)
     setError(null)
     try {
       const res = await fetch('/api/members/status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: id, status: 'approved' })
+        body: JSON.stringify({ member_id: id, status })
       })
       const json = (await res.json()) as { ok?: boolean; error?: string }
       if (!res.ok || !json.ok) {
-        setError(json.error ?? 'Could not approve')
+        setError(json.error ?? `Could not ${status === 'approved' ? 'approve' : 'reject'}`)
         setBusyId(null)
         return
       }
@@ -138,9 +139,14 @@ export function ApprovalQueue({ members, checkedAt, readOnly = false }: Approval
                         Review →
                       </Link>
                       {!readOnly && (
-                        <button onClick={() => quickApprove(m.id)} disabled={busyId !== null} style={approveBtn}>
-                          {busyId === m.id ? '…' : 'Approve'}
-                        </button>
+                        <>
+                          <button onClick={() => setStatus(m.id, 'approved')} disabled={busyId !== null} style={approveBtn}>
+                            {busyId === m.id ? '…' : 'Approve'}
+                          </button>
+                          <button onClick={() => setStatus(m.id, 'rejected')} disabled={busyId !== null} style={rejectBtn}>
+                            Reject
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
@@ -172,4 +178,15 @@ const approveBtn: React.CSSProperties = {
   fontSize: '0.78rem',
   fontWeight: 600,
   cursor: 'pointer'
+}
+const rejectBtn: React.CSSProperties = {
+  padding: '0.25rem 0.7rem',
+  borderRadius: 6,
+  border: '1px solid #dc2626',
+  background: '#fff',
+  color: '#dc2626',
+  fontSize: '0.78rem',
+  fontWeight: 600,
+  cursor: 'pointer',
+  marginLeft: '0.4rem'
 }
