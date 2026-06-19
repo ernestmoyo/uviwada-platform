@@ -4,8 +4,9 @@ import Link from 'next/link'
 
 import { AdminNav } from '@/components/AdminNav'
 import { PaymentsRecorder } from '@/components/journey2/PaymentsRecorder'
+import { PaymentsToVerify } from '@/components/journey2/PaymentsToVerify'
 import { fetchMembersForOrg } from '@/lib/admin-data'
-import { fetchRecentPayments } from '@/lib/journey2-data'
+import { fetchRecentPayments, fetchPendingPayments } from '@/lib/journey2-data'
 import { getCurrentUser } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
 import { getCurrentTenant } from '@/lib/tenant'
@@ -21,9 +22,10 @@ export default async function AdminPaymentsPage() {
   if (!canRecord) redirect('/admin')
 
   const tenant = getCurrentTenant()
-  const [members, payments] = await Promise.all([
+  const [members, payments, pendingPayments] = await Promise.all([
     fetchMembersForOrg(tenant.id),
-    fetchRecentPayments(tenant.id)
+    fetchRecentPayments(tenant.id),
+    fetchPendingPayments(tenant.id)
   ])
   const today = new Date().toISOString().slice(0, 10)
   const memberOptions = members.map((m) => ({ id: m.id, centre_name: m.centre_name, ward: m.ward }))
@@ -40,6 +42,8 @@ export default async function AdminPaymentsPage() {
               Record payments manually. Reference number and method are always required, including cash.
             </p>
           </div>
+
+          <PaymentsToVerify payments={pendingPayments} />
 
           <section style={{ background: '#fff', borderRadius: 12, padding: '1.25rem', boxShadow: 'var(--shadow)', marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '1.1rem', marginTop: 0 }}>Record a payment</h2>

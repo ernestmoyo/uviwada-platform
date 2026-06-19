@@ -213,3 +213,47 @@ export async function fetchRecentPayments(orgId: string, limit = 50): Promise<Ar
     .filter((x) => isNationalTenant(orgId) || x.mem.org_id === orgId)
     .map((x) => ({ ...x.row, centre_name: x.mem.centre_name }))
 }
+
+export interface PendingPayment {
+  id: string
+  member_id: string
+  amount: number
+  currency: string
+  payment_date: string
+  reference_number: string
+  method: string
+  status: string
+  created_at: string
+  centre_name: string
+}
+
+// Member-submitted payments awaiting secretariat verification.
+export async function fetchPendingPayments(orgId: string, limit = 100): Promise<PendingPayment[]> {
+  if (!isSupabaseConfigured()) return []
+  const supabase = getSupabaseAdmin()
+  if (!supabase) return []
+  const { data } = await supabase
+    .from('member_payments')
+    .select('id, member_id, amount, currency, payment_date, reference_number, method, status, created_at, members(centre_name, org_id)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  type Joined = {
+    id: string; member_id: string; amount: number; currency: string; payment_date: string
+    reference_number: string; method: string; status: string; created_at: string
+    members: { centre_name: string; org_id: string } | { centre_name: string; org_id: string }[] | null
+  }
+  const rows = (data ?? []) as unknown as Joined[]
+  return rows
+    .map((r) => {
+      const mem = Array.isArray(r.members) ? r.members[0] : r.members
+      return mem ? { r, mem } : null
+    })
+    .filter((x): x is { r: Joined; mem: { centre_name: string; org_id: string } } => !!x)
+    .filter((x) => isNationalTenant(orgId) || x.mem.org_id === orgId)
+    .map((x) => ({
+      id: x.r.id, member_id: x.r.member_id, amount: x.r.amount, currency: x.r.currency,
+      payment_date: x.r.payment_date, reference_number: x.r.reference_number, method: x.r.method,
+      status: x.r.status, created_at: x.r.created_at, centre_name: x.mem.centre_name
+    }))
+}

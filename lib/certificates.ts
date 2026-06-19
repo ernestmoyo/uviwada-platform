@@ -72,3 +72,16 @@ export async function getCertificateForMember(supabase: SB, memberId: string): P
     .maybeSingle()
   return (data as CertRow) ?? null
 }
+
+// Raise a certificate request (if needed) AND issue it in one step. Used when a
+// payment is verified, so a verified payment always yields an issued certificate.
+export async function requestAndIssueCertificate(
+  supabase: SB,
+  memberId: string,
+  approverId: string
+): Promise<CertRow | null> {
+  await ensureCertificateRequest(supabase, memberId)
+  const cert = await getCertificateForMember(supabase, memberId)
+  if (!cert) return null
+  return issueCertificate(supabase, cert.id, approverId)
+}
