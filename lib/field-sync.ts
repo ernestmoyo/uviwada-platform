@@ -1,9 +1,11 @@
 /**
- * Field-app sync core (framework-agnostic, DB-injected → unit-testable).
+ * Field-app sync core (framework-agnostic, dependency-injected → unit-testable).
  *
  * Writes the UVIWATA Field App's offline queue into the platform's NATIVE rubric
  * storage (rubric_assessments + rubric_domain_scores from migration 0004) with no
- * lossy mapping. The platform computes the tier; the app only captures Level 1–4.
+ * lossy mapping. Scoring is delegated to a `RubricCtx` (the canonical lib/rubric in
+ * production), so an app-synced assessment is scored/labelled IDENTICALLY to one
+ * entered through the web form (/api/rubric-assessments).
  *
  * `db` is anything with the subset of the supabase-js query builder used here, so
  * the real admin client works in production and a fake works in tests.
@@ -12,8 +14,7 @@
 const UVIWADA_DAR_ORG_ID = '00000000-0000-0000-0000-000000000011'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export type Level = number
-export type DomainMap = Record<string, Level>
+export type DomainMap = Record<string, number>
 
 export interface SyncItem {
   clientId: string
@@ -31,7 +32,15 @@ export interface SyncResult {
   id?: string
 }
 
-// Minimal shape of the supabase query builder we rely on.
+// The canonical rubric, injected so production uses lib/rubric and tests can stub.
+export interface RubricCtx {
+  capacity: ReadonlyArray<{ key: string; en: string }>
+  infra: ReadonlyArray<{ key: string; en: string }>
+  meanLevel(scores: Array<number | null | undefined>): number | null
+  levelToScore(mean1to4: number): number
+  tierForScore(score0to100: number): { label: string; pathway: string }
+}
+
 export interface SupabaseLike {
   from(table: string): {
     select(cols: string): {
@@ -42,41 +51,10 @@ export interface SupabaseLike {
     }
     insert(rows: unknown): {
       select(cols: string): { single(): Promise<{ data: unknown; error: { message?: string } | null }> }
-      error?: unknown
     } & Promise<{ error: { message?: string } | null }>
     update(patch: unknown): { eq(col: string, val: unknown): Promise<{ error: unknown }> }
     delete(): { eq(col: string, val: unknown): Promise<{ error: unknown }> }
   }
-}
-
-// ----------------------------------------------------------------- pure helpers
-export function mean(map: DomainMap): number | null {
-  const vals = Object.values(map || {}).map(Number).filter((n) => Number.isFinite(n))
-  if (!vals.length) return null
-  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100
-}
-
-// Platform computes the tier from the infrastructure mean (the app never does).
-export function tierFromInfra(infraMean: number | null): string | null {
-  if (infraMean == null) return null
-  if (infraMean >= 3.5) return 'Level 4 — Highest standard'
-  if (infraMean >= 2.5) return 'Level 3 — Functional'
-  return 'Level 2 — Emerging'
-}
-
-export function score0to100(m: number | null): number | null {
-  if (m == null) return null
-  return Math.max(0, Math.min(100, Math.round(((m - 1) / 3) * 100)))
-}
-
-function domainRows(assessmentId: string, kind: 'capacity' | 'infra', map: DomainMap) {
-  return Object.entries(map || {}).map(([key, level]) => ({
-    assessment_id: assessmentId,
-    kind,
-    domain_key: key,
-    domain_label: key, // payload carries keys only; label enriched server-side later
-    level: Number.isFinite(Number(level)) ? Number(level) : null
-  }))
 }
 
 function uuid(): string {
@@ -87,12 +65,13 @@ function uuid(): string {
 export async function processSyncBatch(
   db: SupabaseLike,
   batch: SyncBatch,
-  configVersion: string | null
+  configVersion: string | null,
+  rubric: RubricCtx
 ): Promise<{ configVersion: string | null; results: SyncResult[] }> {
   const results: SyncResult[] = []
   for (const item of batch.items || []) {
     try {
-      if (item.type === 'assessment') results.push(await syncAssessment(db, item))
+      if (item.type === 'assessment') results.push(await syncAssessment(db, item, rubric))
       else if (item.type === 'registration') results.push(await syncRegistration(db, item))
       else results.push({ clientId: item.clientId, status: 'rejected', error: 'unknown type' })
     } catch (err) {
@@ -102,10 +81,10 @@ export async function processSyncBatch(
   return { configVersion, results }
 }
 
-async function syncAssessment(db: SupabaseLike, item: SyncItem): Promise<SyncResult> {
+async function syncAssessment(db: SupabaseLike, item: SyncItem, rubric: RubricCtx): Promise<SyncResult> {
   const p = item.payload as {
     clientId?: string; centreId?: string; infra?: DomainMap; capacity?: DomainMap
-    notes?: string; gps?: { lat?: number; lng?: number } | null
+    notes?: string; gps?: { lat?: number; lng?: number } | null; photos?: string[]
   }
   const submissionUuid = p.clientId || item.clientId
   const memberId = p.centreId || ''
@@ -116,29 +95,36 @@ async function syncAssessment(db: SupabaseLike, item: SyncItem): Promise<SyncRes
   const existing = await db.from('rubric_assessments').select('id').eq('submission_uuid', submissionUuid).maybeSingle()
   if (existing.data) return { clientId: item.clientId, status: 'accepted', id: (existing.data as { id: string }).id }
 
-  const capacityMean = mean(p.capacity || {})
-  const infraMean = mean(p.infra || {})
+  const capMap = p.capacity || {}
+  const infraMap = p.infra || {}
+  // Score with the SAME canonical rubric the web form uses (server-authoritative).
+  const capMean = rubric.meanLevel(rubric.capacity.map((c) => capMap[c.key] ?? null))
+  const infraMean = rubric.meanLevel(rubric.infra.map((c) => infraMap[c.key] ?? null))
+  const capScore = capMean == null ? null : rubric.levelToScore(capMean)
+  const infraScore = infraMean == null ? null : rubric.levelToScore(infraMean)
+  const tierDef = infraScore == null ? null : rubric.tierForScore(infraScore)
 
   const ins = await db.from('rubric_assessments').insert({
     member_id: memberId, submission_uuid: submissionUuid, assessment_type: 'field',
     assessed_on: new Date().toISOString().slice(0, 10),
     gps_lat: p.gps?.lat ?? null, gps_lng: p.gps?.lng ?? null,
-    capacity_result: capacityMean, capacity_score: score0to100(capacityMean),
-    infra_result: infraMean, infra_score: score0to100(infraMean),
-    infra_tier: tierFromInfra(infraMean), assessor_comments: p.notes || null,
-    source: 'apk_synced', raw: item.payload
+    capacity_result: capMean, capacity_score: capScore,
+    infra_result: infraMean, infra_score: infraScore,
+    infra_tier: tierDef?.label ?? null, formalization_pathway: tierDef?.pathway ?? null,
+    assessor_comments: p.notes || null, source: 'apk_synced',
+    raw: { capacity: capMap, infra: infraMap, photo_urls: p.photos ?? [], via: 'apk_synced', client_id: submissionUuid }
   }).select('id').single()
   if (ins.error || !ins.data) throw new Error(ins.error?.message || 'assessment insert failed')
   const assessmentId = (ins.data as { id: string }).id
 
+  // One row per domain (all 27, even unrated → null), labelled like the web form.
   const rows = [
-    ...domainRows(assessmentId, 'capacity', p.capacity || {}),
-    ...domainRows(assessmentId, 'infra', p.infra || {})
+    ...rubric.capacity.map((c) => ({ assessment_id: assessmentId, kind: 'capacity', domain_key: c.key, domain_label: c.en, level: capMap[c.key] ?? null })),
+    ...rubric.infra.map((c) => ({ assessment_id: assessmentId, kind: 'infra', domain_key: c.key, domain_label: c.en, level: infraMap[c.key] ?? null }))
   ]
-  if (rows.length) {
-    const ds = await db.from('rubric_domain_scores').insert(rows)
-    if (ds.error) throw new Error('domain scores failed: ' + ((ds.error as { message?: string }).message || ''))
-  }
+  const ds = await db.from('rubric_domain_scores').insert(rows)
+  if (ds.error) throw new Error('domain scores failed: ' + ((ds.error as { message?: string }).message || ''))
+
   return { clientId: item.clientId, status: 'accepted', id: assessmentId }
 }
 

@@ -1,7 +1,20 @@
 import { NextResponse } from 'next/server'
 
 import { getSupabaseAdmin } from '@/lib/supabase/server'
-import { processSyncBatch, type SupabaseLike, type SyncBatch } from '@/lib/field-sync'
+import { processSyncBatch, type SupabaseLike, type SyncBatch, type RubricCtx } from '@/lib/field-sync'
+import { CAPACITY_COMPETENCIES, INFRA_SUBDOMAINS, meanLevel, levelToScore, tierForScore } from '@/lib/rubric'
+
+// Inject the canonical rubric so app-synced assessments score exactly like web ones.
+const RUBRIC: RubricCtx = {
+  capacity: CAPACITY_COMPETENCIES,
+  infra: INFRA_SUBDOMAINS,
+  meanLevel,
+  levelToScore,
+  tierForScore: (s) => {
+    const t = tierForScore(s)
+    return { label: t.label, pathway: t.pathway }
+  }
+}
 
 /**
  * Field-app sync endpoint.
@@ -52,6 +65,6 @@ export async function POST(request: Request) {
   if (!supabase) return json({ error: 'Supabase not configured' }, 503)
 
   const configVersion = batch.configVersion ?? process.env.RUBRIC_VERSION ?? null
-  const out = await processSyncBatch(supabase as unknown as SupabaseLike, batch, configVersion)
+  const out = await processSyncBatch(supabase as unknown as SupabaseLike, batch, configVersion, RUBRIC)
   return json(out, 200)
 }
