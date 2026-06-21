@@ -60,7 +60,13 @@ export async function POST(request: Request) {
   const supabase = getSupabaseAdmin()
   if (!supabase) return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
 
-  const cert = await issueCertificate(supabase, parsed.data.id, user.id)
-  if (!cert) return NextResponse.json({ error: 'Certificate not found' }, { status: 404 })
-  return NextResponse.json({ ok: true, cert_ref: cert.cert_ref })
+  try {
+    const cert = await issueCertificate(supabase, parsed.data.id, user.id)
+    if (!cert) return NextResponse.json({ error: 'Certificate not found' }, { status: 404 })
+    return NextResponse.json({ ok: true, cert_ref: cert.cert_ref })
+  } catch (e) {
+    console.error('certificates: issue failed', e)
+    const message = e instanceof Error ? e.message : 'Could not issue certificate'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { fmtNum, fmtDate } from '@/lib/format'
@@ -10,23 +11,26 @@ export function PaymentsToVerify({ payments }: { payments: PendingPayment[] }) {
   const router = useRouter()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
 
   async function verify(id: string) {
     if (busyId) return
     setBusyId(id)
     setError(null)
+    setWarning(null)
     try {
       const res = await fetch('/api/admin/payments/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payment_id: id })
       })
-      const json = (await res.json()) as { ok?: boolean; error?: string }
+      const json = (await res.json()) as { ok?: boolean; error?: string; cert_issued?: boolean; warning?: string }
       if (!res.ok || !json.ok) {
         setError(json.error ?? 'Could not verify payment')
         setBusyId(null)
         return
       }
+      if (json.cert_issued === false) setWarning(json.warning ?? 'Payment verified, but the certificate could not be issued.')
       router.refresh()
       setBusyId(null)
     } catch {
@@ -54,6 +58,12 @@ export function PaymentsToVerify({ payments }: { payments: PendingPayment[] }) {
       </p>
 
       {error && <p style={{ color: '#991b1b', fontSize: '0.85rem' }}>{error}</p>}
+      {warning && (
+        <p style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e', fontSize: '0.85rem', padding: '0.6rem 0.75rem', borderRadius: 8 }}>
+          {warning}{' '}
+          <Link href="/admin/certificates" style={{ color: '#b45309', fontWeight: 600 }}>Go to Certificates →</Link>
+        </p>
+      )}
 
       {payments.length === 0 ? (
         <div style={{ padding: '1rem 0', textAlign: 'center', color: 'var(--muted)', fontSize: '0.9rem' }}>

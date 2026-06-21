@@ -34,6 +34,7 @@ export function CertificateApprovals({ approverName: _approverName }: Props) {
   const sw = lang === 'sw'
   const [items, setItems] = useState<CertItem[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/certificates', { cache: 'no-store' })
@@ -51,12 +52,22 @@ export function CertificateApprovals({ approverName: _approverName }: Props) {
 
   async function approve(id: string) {
     setBusy(id)
-    const res = await fetch('/api/admin/certificates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    })
-    if (res.ok) await load()
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      if (res.ok && j.ok) {
+        await load()
+      } else {
+        setError(j.error ?? (sw ? 'Imeshindikana kutoa cheti.' : 'Could not issue certificate.'))
+      }
+    } catch {
+      setError(sw ? 'Hitilafu ya mtandao — jaribu tena.' : 'Network error — please try again.')
+    }
     setBusy(null)
   }
 
@@ -85,6 +96,11 @@ export function CertificateApprovals({ approverName: _approverName }: Props) {
 
   return (
     <div style={{ display: 'grid', gap: '1.25rem' }}>
+      {error && (
+        <p style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.85rem', padding: '0.6rem 0.75rem', borderRadius: 8, margin: 0 }}>
+          {error}
+        </p>
+      )}
       <div className="mem-card">
         <div className="mem-card-head">
           <h3>{sw ? `Yanayosubiri idhini (${pending.length})` : `Awaiting approval (${pending.length})`}</h3>

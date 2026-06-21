@@ -40,12 +40,20 @@ export async function POST(request: Request) {
     }
   }
 
+  // The payment is verified (a real, physical check) and stays verified even if
+  // the certificate step fails. We report whether the certificate was issued so
+  // the UI can offer a recovery path instead of failing silently.
   let certRef: string | null = null
+  let certIssued = false
+  let warning: string | null = null
   try {
     const cert = await requestAndIssueCertificate(supabase, p.member_id, user.id)
     certRef = cert?.cert_ref ?? null
+    certIssued = !!cert && cert.status === 'issued' && !!certRef
+    if (!certIssued) warning = 'Payment verified, but the certificate could not be issued. Issue it from the Certificates page.'
   } catch (e) {
-    console.error('verify: certificate issue failed (non-fatal)', e)
+    console.error('verify: certificate issue failed', e)
+    warning = 'Payment verified, but the certificate could not be issued. Issue it from the Certificates page.'
   }
-  return NextResponse.json({ ok: true, cert_ref: certRef })
+  return NextResponse.json({ ok: true, cert_issued: certIssued, cert_ref: certRef, warning })
 }

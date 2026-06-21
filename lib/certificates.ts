@@ -48,18 +48,32 @@ export async function ensureCertificateRequest(supabase: SB, memberId: string): 
 
 export async function issueCertificate(supabase: SB, id: string, approverId: string): Promise<CertRow | null> {
   const { data: cert } = await supabase.from('certificates').select('*').eq('id', id).maybeSingle()
-  if (!cert) return null
+  if (!cert) return null // genuinely not found — caller treats as 404
   const c = cert as CertRow
   if (c.status === 'issued') return c
   const year = (c.period_start ?? new Date().toISOString()).slice(0, 4)
-  const ref = c.cert_ref ?? `UVW-CERT-${year}-${randomDigits(5)}`
-  const { data: updated } = await supabase
-    .from('certificates')
-    .update({ status: 'issued', cert_ref: ref, approved_by: approverId, approved_at: new Date().toISOString() })
-    .eq('id', id)
-    .select('*')
-    .maybeSingle()
-  return (updated as CertRow) ?? null
+
+  // Try to issue; if the existing/first ref collides with UNIQUE(cert_ref),
+  // retry once with a freshly generated reference. Any other DB error throws so
+  // callers (and the secretariat UI) see the failure instead of a silent no-op.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ref = (attempt === 0 && c.cert_ref) ? c.cert_ref : `UVW-CERT-${year}-${randomDigits(5)}`
+    const { data: updated, error } = await supabase
+      .from('certificates')
+      .update({ status: 'issued', cert_ref: ref, approved_by: approverId, approved_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*')
+      .maybeSingle()
+    if (!error) {
+      if (!updated) throw new Error('Certificate update returned no row')
+      return updated as CertRow
+    }
+    // 23505 = unique_violation on cert_ref — loop to retry with a new ref.
+    if (error.code !== '23505' || attempt === 1) {
+      throw new Error(`Could not issue certificate: ${error.message}`)
+    }
+  }
+  return null
 }
 
 export async function getCertificateForMember(supabase: SB, memberId: string): Promise<CertRow | null> {
