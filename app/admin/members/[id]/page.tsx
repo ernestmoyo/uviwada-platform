@@ -3,6 +3,7 @@ import { fmtNum, fmtDate } from '@/lib/format'
 import { notFound, redirect } from 'next/navigation'
 
 import { AdminNav } from '@/components/AdminNav'
+import { AiRecommendations } from '@/components/AiRecommendations'
 import { AuditLog } from '@/components/journey2/AuditLog'
 import { MembershipReview } from '@/components/journey2/MembershipReview'
 import { PaymentForm } from '@/components/journey2/PaymentForm'
@@ -91,6 +92,8 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
 
             <MembershipReview memberId={member.id} status={member.membership_status} readOnly={!canModerate} />
           </div>
+
+          <AiRecommendations memberId={member.id} />
 
           <div style={{ marginBottom: '1.5rem' }}>
             <AuditLog title="Membership status history" entries={logs} />

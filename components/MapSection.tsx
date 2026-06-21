@@ -13,10 +13,12 @@ const WardMap = dynamic(() => import('./WardMap').then((m) => m.WardMap), {
 
 interface MapSectionProps {
   centres: PublicCentre[]
+  total?: number
 }
 
-export function MapSection({ centres }: MapSectionProps) {
+export function MapSection({ centres, total }: MapSectionProps) {
   const { lang } = useI18n()
+  const assessed = total ?? centres.length
   return (
     <section className="section section-alt" id="map">
       <div className="container">
@@ -25,8 +27,8 @@ export function MapSection({ centres }: MapSectionProps) {
           <h2>{lang === 'sw' ? 'Ramani ya Vituo Vilivyotathminiwa' : 'Assessed Centres on the Map'}</h2>
           <p className="section-desc">
             {lang === 'sw'
-              ? `Vituo ${centres.length} vyenye viwianishi vya GPS, kati ya 234 vilivyotathminiwa — vikiwa na rangi kulingana na ngazi ya ubora katika kata za Dar es Salaam`
-              : `${centres.length} of the 234 assessed centres have GPS coordinates — shown here across Dar es Salaam wards, coloured by quality tier`}
+              ? `Vituo ${centres.length} vyenye viwianishi vya GPS, kati ya ${assessed} vilivyotathminiwa — vikiwa na rangi kulingana na ngazi ya ubora katika kata za Dar es Salaam`
+              : `${centres.length} of the ${assessed} assessed centres have GPS coordinates — shown here across Dar es Salaam wards, coloured by quality tier`}
           </p>
         </div>
         <div className="map-container">

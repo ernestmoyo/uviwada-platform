@@ -2,23 +2,23 @@
 
 import { useI18n } from '@/lib/i18n'
 import { fmtNum } from '@/lib/format'
+import { TZ_REGIONS } from '@/lib/regions'
 
 interface RegionalStructureProps {
   centres: number
   councils: number
   children: number
+  /** Region names that have live data (rendered as active, not "coming soon"). */
+  liveRegions?: string[]
 }
 
-const ROADMAP_REGIONS = [
-  { en: 'Mwanza', sw: 'Mwanza' },
-  { en: 'Arusha', sw: 'Arusha' },
-  { en: 'Dodoma', sw: 'Dodoma' },
-  { en: 'Mbeya', sw: 'Mbeya' },
-]
-
-export function RegionalStructure({ centres, councils, children }: RegionalStructureProps) {
+export function RegionalStructure({ centres, councils, children, liveRegions = ['Dar es Salaam'] }: RegionalStructureProps) {
   const { lang } = useI18n()
   const sw = lang === 'sw'
+
+  // Every Tanzania region without live data yet, shown as "coming soon".
+  const liveSet = new Set(liveRegions)
+  const roadmapRegions = TZ_REGIONS.filter((r) => !liveSet.has(r.name))
 
   return (
     <section className="section" id="regions">
@@ -67,16 +67,16 @@ export function RegionalStructure({ centres, councils, children }: RegionalStruc
             </div>
           </div>
 
-          {/* Roadmap regions */}
-          {ROADMAP_REGIONS.map((region) => (
-            <div className="reg-card reg-card-roadmap" key={region.en}>
+          {/* Roadmap regions — every Tanzania region not yet live */}
+          {roadmapRegions.map((region) => (
+            <div className="reg-card reg-card-roadmap" key={region.name}>
               <div className="reg-card-head">
                 <div className="reg-status-pill reg-status-roadmap">
                   {sw ? 'Inakuja' : 'Coming soon'}
                 </div>
                 <span className="reg-flag" aria-hidden>📍</span>
               </div>
-              <h3 className="reg-name">{sw ? region.sw : region.en}</h3>
+              <h3 className="reg-name">{region.name}</h3>
               <p className="reg-region">{sw ? 'Mkoa' : 'Region'}</p>
               <p className="reg-desc reg-desc-muted">
                 {sw

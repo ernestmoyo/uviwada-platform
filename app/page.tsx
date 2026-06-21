@@ -14,7 +14,7 @@ import { OurApproach } from '@/components/OurApproach'
 import { TopBar } from '@/components/TopBar'
 import { WhyJoin } from '@/components/WhyJoin'
 import { fetchRubricSnapshot } from '@/lib/rubric-data'
-import { computeKpis, rubricToPublicCentres } from '@/lib/sector'
+import { computeKpis, rubricToPublicCentres, uniqueRegions } from '@/lib/sector'
 
 // ISR — re-fetch from Supabase at most once per minute. Avoids the visible
 // flicker of force-dynamic + the prerender hazard of static. The rubric fetch
@@ -38,11 +38,11 @@ export default async function HomePage() {
         <About />
         <OurApproach />
         <WhyJoin />
-        <RegionalStructure centres={kpis.centres} councils={kpis.councils} children={kpis.children} />
+        <RegionalStructure centres={kpis.centres} councils={kpis.councils} children={kpis.children} liveRegions={uniqueRegions(rubric.centres).length ? uniqueRegions(rubric.centres) : ['Dar es Salaam']} />
         <Services />
         <Dashboard centres={rubric.centres} meta={rubric.meta} source={rubric.source} />
         <ImpactCase />
-        <MapSection centres={mapCentres} />
+        <MapSection centres={mapCentres} total={kpis.centres} />
         <FieldToolSection />
         <PortalCta />
         <Contact />

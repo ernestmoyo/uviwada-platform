@@ -21,6 +21,7 @@ import {
 import { regionOptions } from '@/lib/regions'
 
 const TRAFFIC = { green: '#22c55e', amber: '#f59e0b', red: '#ef4444' }
+const LEVEL_COLOR: Record<string, string> = { 'Level 4': '#22c55e', 'Level 3': '#84cc16', 'Level 2': '#f59e0b', 'Level 1': '#ef4444' }
 
 interface DashboardProps {
   centres: RubricCentre[]
@@ -175,13 +176,13 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
             {tiers.scoredN === 0 ? (
               <Empty sw={sw} />
             ) : (
-              (['Level 4', 'Level 3', 'Level 2'] as const).map((t) => (
+              (['Level 4', 'Level 3', 'Level 2', 'Level 1'] as const).map((t) => (
                 <Bar
                   key={t}
                   label={t}
                   value={tiers.scored[t]}
                   max={tiers.scoredN}
-                  color={t === 'Level 4' ? TRAFFIC.green : t === 'Level 3' ? TRAFFIC.amber : TRAFFIC.red}
+                  color={LEVEL_COLOR[t]}
                   suffix={` (${pct(tiers.scored[t], tiers.scoredN)}%)`}
                 />
               ))

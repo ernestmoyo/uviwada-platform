@@ -35,7 +35,7 @@ export default async function MEDashboardPage() {
                 Programme Performance — {stats.total_members} centres tracked
               </h1>
               <p style={{ color: 'var(--muted)', fontSize: '0.85rem', margin: 0 }}>
-                Preliminary — figures from the 234-centre rubric round (June 2026). Indicators map to Tanzania&apos;s NMECDP framework (alignment to be confirmed during inception).
+                Preliminary — figures from the June 2026 rubric round. Indicators map to Tanzania&apos;s NMECDP framework (alignment to be confirmed during inception).
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -100,7 +100,7 @@ export default async function MEDashboardPage() {
               <Indicator label="Expired licences" status={stats.expired_licences === 0 ? 'green' : stats.expired_licences > 5 ? 'red' : 'amber'} value={String(stats.expired_licences)} />
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.85rem' }}>
-              Preliminary — figures derived from the 234-centre rubric round (June 2026). All values reflect real membership records; NMECDP indicator alignment and final metric definitions will be confirmed during the inception workshop with UVIWADA + CiC programme staff.
+              Preliminary — figures derived from the June 2026 rubric round. All values reflect real membership records; NMECDP indicator alignment and final metric definitions will be confirmed during the inception workshop with UVIWADA + CiC programme staff.
             </p>
           </div>
         </div>

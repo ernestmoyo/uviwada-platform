@@ -54,6 +54,9 @@ export default async function PortalPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <MembershipStatusPill memberId={user.member_id} centreName={centre.centre_name} />
+                  <Link href="/portal/curriculum" className="btn">
+                    Curriculum & Lesson Plans →
+                  </Link>
                   <Link href="/portal/membership" className="btn btn-primary">
                     Membership & Certificate →
                   </Link>
