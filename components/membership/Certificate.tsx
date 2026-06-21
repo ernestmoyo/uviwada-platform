@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { fmtDate } from '@/lib/format'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface Props {
   memberId: string
@@ -32,26 +32,34 @@ export function Certificate({ memberId: _memberId, centreName, ownerName, ward, 
   const [cert, setCert] = useState<CertStatus | null>(null)
   const [ready, setReady] = useState(false)
 
-  useEffect(() => {
-    let alive = true
-    void fetch('/api/members/certificate', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : { status: 'none' }))
-      .then((j: CertStatus) => {
-        if (alive) {
-          setCert(j)
-          setReady(true)
-        }
-      })
-      .catch(() => {
-        if (alive) {
-          setCert({ status: 'none', cert_ref: null, period_label: null, approved_at: null })
-          setReady(true)
-        }
-      })
-    return () => {
-      alive = false
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch('/api/members/certificate', { cache: 'no-store' })
+      const j = (r.ok ? await r.json() : { status: 'none' }) as CertStatus
+      setCert(j)
+    } catch {
+      setCert({ status: 'none', cert_ref: null, period_label: null, approved_at: null })
+    } finally {
+      setReady(true)
     }
   }, [])
+
+  useEffect(() => { void load() }, [load])
+
+  // Auto-refresh so the certificate appears once the secretariat issues it,
+  // without a manual hard refresh: re-check on tab focus, and poll every 15s
+  // while it is not yet issued.
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') void load() }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    const id = cert?.status === 'issued' ? undefined : setInterval(refresh, 15000)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+      if (id) clearInterval(id)
+    }
+  }, [load, cert?.status])
 
   if (!ready) return null
 

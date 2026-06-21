@@ -62,6 +62,21 @@ export function MembershipPanel({ memberId: _memberId, centreName: _centreName }
 
   useEffect(() => { void load() }, [load])
 
+  // Auto-refresh so the member sees the secretariat's verification / certificate
+  // issuance without a manual hard refresh: re-check when the tab regains focus,
+  // and poll every 15s while still waiting (until the certificate is issued).
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') void load() }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    const id = cert?.status === 'issued' ? undefined : setInterval(refresh, 15000)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+      if (id) clearInterval(id)
+    }
+  }, [load, cert?.status])
+
   async function submitPayment() {
     if (submitting) return
     if (!reference.trim()) { setError(sw ? 'Weka namba ya rejea ya malipo.' : 'Enter the payment reference number.'); return }
