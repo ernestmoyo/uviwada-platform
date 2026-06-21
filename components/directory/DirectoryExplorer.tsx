@@ -5,11 +5,12 @@ import { useMemo, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
 import type { DirectoryCentre } from '@/lib/directory'
+import type { RegionOption } from '@/lib/regions'
 import { RubricMap } from '@/components/quality/RubricMap'
 
 type SortKey = 'name' | 'tier' | 'enrolment'
 
-const TIER_ORDER: Record<string, number> = { 'Level 4': 0, 'Level 3': 1, 'Level 2': 2, Pending: 3 }
+const TIER_ORDER: Record<string, number> = { 'Level 4': 0, 'Level 3': 1, 'Level 2': 2, 'Level 1': 3, Pending: 4 }
 
 function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6371
@@ -23,15 +24,17 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
 
 interface Props {
   centres: DirectoryCentre[]
+  regions: RegionOption[]
   councils: string[]
   ownerships: string[]
 }
 
-export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
+export function DirectoryExplorer({ centres, regions, councils, ownerships }: Props) {
   const { lang } = useI18n()
   const sw = lang === 'sw'
 
   const [q, setQ] = useState('')
+  const [region, setRegion] = useState('All')
   const [council, setCouncil] = useState('All')
   const [ward, setWard] = useState('All')
   const [ownership, setOwnership] = useState('All')
@@ -51,14 +54,26 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
     )
   }
 
+  // Councils available within the selected region (cascade).
+  const councilOptions = useMemo(() => {
+    const subset = region === 'All' ? centres : centres.filter((c) => c.region === region)
+    const inRegion = Array.from(new Set(subset.map((c) => c.council).filter((x): x is string => !!x))).sort()
+    return inRegion.length ? inRegion : councils
+  }, [centres, region, councils])
+
   const wardOptions = useMemo(() => {
-    const subset = council === 'All' ? centres : centres.filter((c) => c.council === council)
+    let subset = region === 'All' ? centres : centres.filter((c) => c.region === region)
+    if (council !== 'All') subset = subset.filter((c) => c.council === council)
     return Array.from(new Set(subset.map((c) => c.ward).filter((w): w is string => !!w))).sort()
-  }, [centres, council])
+  }, [centres, region, council])
+
+  // A region selected from the "coming soon" set (no data yet).
+  const regionComingSoon = region !== 'All' && !(regions.find((r) => r.value === region)?.live)
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
     const filtered = centres.filter((c) => {
+      if (region !== 'All' && c.region !== region) return false
       if (council !== 'All' && c.council !== council) return false
       if (ward !== 'All' && c.ward !== ward) return false
       if (ownership !== 'All' && c.ownership !== ownership) return false
@@ -81,7 +96,7 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
     else if (sort === 'enrolment') sorted.sort((a, b) => (b.children ?? 0) - (a.children ?? 0))
     else sorted.sort((a, b) => (TIER_ORDER[a.tierShort] ?? 9) - (TIER_ORDER[b.tierShort] ?? 9) || a.name.localeCompare(b.name))
     return sorted
-  }, [centres, q, council, ward, ownership, tier, sort, near])
+  }, [centres, q, region, council, ward, ownership, tier, sort, near])
 
   const mapPoints = useMemo(
     () =>
@@ -103,10 +118,18 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
           aria-label={sw ? 'Tafuta kituo' : 'Search centres'}
         />
         <Select
+          label={sw ? 'Mkoa' : 'Province/Region'}
+          value={region}
+          onChange={(v) => { setRegion(v); setCouncil('All'); setWard('All') }}
+          options={['All', ...regions.map((r) => r.value)]}
+          allLabel={sw ? 'Mikoa yote' : 'All regions'}
+          labels={Object.fromEntries(regions.map((r) => [r.value, r.label]))}
+        />
+        <Select
           label={sw ? 'Halmashauri' : 'Council'}
           value={council}
           onChange={(v) => { setCouncil(v); setWard('All') }}
-          options={['All', ...councils]}
+          options={['All', ...councilOptions]}
           allLabel={sw ? 'Zote' : 'All'}
         />
         <Select
@@ -117,7 +140,7 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
           allLabel={sw ? 'Zote' : 'All wards'}
         />
         <Select label={sw ? 'Umiliki' : 'Ownership'} value={ownership} onChange={setOwnership} options={['All', ...ownerships]} allLabel={sw ? 'Zote' : 'All'} />
-        <Select label={sw ? 'Ngazi' : 'Tier'} value={tier} onChange={setTier} options={['All', 'Level 4', 'Level 3', 'Level 2']} allLabel={sw ? 'Zote' : 'All'} />
+        <Select label={sw ? 'Ngazi' : 'Tier'} value={tier} onChange={setTier} options={['All', 'Level 4', 'Level 3', 'Level 2', 'Level 1']} allLabel={sw ? 'Zote' : 'All'} />
         <Select
           label={sw ? 'Panga' : 'Sort'}
           value={sort}
@@ -127,9 +150,22 @@ export function DirectoryExplorer({ centres, councils, ownerships }: Props) {
         />
       </div>
 
-      <p className="dir-count">
-        {sw ? 'Inaonyesha' : 'Showing'} <strong>{results.length}</strong> {sw ? 'kati ya' : 'of'} {centres.length} {sw ? 'vituo' : 'centres'}
-      </p>
+      {regionComingSoon ? (
+        <div className="u-card" style={{ padding: '2rem', textAlign: 'center', margin: '0.5rem 0 1rem', border: '1px dashed var(--border)' }}>
+          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--primary-dark, #0F3D6E)' }}>
+            {sw ? `${region}: takwimu zinakuja hivi karibuni` : `${region}: data coming soon`}
+          </div>
+          <p style={{ color: 'var(--muted)', marginTop: '0.4rem', fontSize: '0.9rem' }}>
+            {sw
+              ? 'Tathmini ya vituo katika mkoa huu bado haijaanza. Kwa sasa data ipo kwa Dar es Salaam.'
+              : 'Centre assessments for this region are not live yet. Data is currently available for Dar es Salaam.'}
+          </p>
+        </div>
+      ) : (
+        <p className="dir-count">
+          {sw ? 'Inaonyesha' : 'Showing'} <strong>{results.length}</strong> {sw ? 'kati ya' : 'of'} {centres.length} {sw ? 'vituo' : 'centres'}
+        </p>
+      )}
 
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', margin: '0 0 1rem' }}>
         <div style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>

@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation'
 
 import type { AdminMember, MembershipStatus } from '@/lib/admin-data'
 import type { LicenseStatus, QualityRating } from '@/lib/types/database'
+import { regionOptions } from '@/lib/regions'
 
 export interface MembersTableInitialFilters {
   q?: string
+  region?: string
   ward?: string
   district?: string
   quality?: string
@@ -28,6 +30,7 @@ const LICENSE_OPTIONS: Array<LicenseStatus | 'all'> = ['all', 'fully_licensed', 
 export function MembersTable({ members, readOnly = false, initialFilters = {} }: MembersTableProps) {
   const router = useRouter()
   const [search, setSearch] = useState(initialFilters.q ?? '')
+  const [region, setRegion] = useState(initialFilters.region ?? 'all')
   const [ward, setWard] = useState(initialFilters.ward ?? 'all')
   const [district, setDistrict] = useState(initialFilters.district ?? 'all')
   const [quality, setQuality] = useState<string>(initialFilters.quality ?? 'all')
@@ -61,28 +64,38 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
     }
   }
 
-  const wards = useMemo(() => Array.from(new Set(members.map((m) => m.ward))).sort(), [members])
-  const districts = useMemo(() => Array.from(new Set(members.map((m) => m.district))).sort(), [members])
+  const regions = useMemo(() => regionOptions(Array.from(new Set(members.map((m) => m.region).filter((x): x is string => !!x)))), [members])
+  const districts = useMemo(() => {
+    const subset = region === 'all' ? members : members.filter((m) => m.region === region)
+    return Array.from(new Set(subset.map((m) => m.district))).sort()
+  }, [members, region])
+  const wards = useMemo(() => {
+    let subset = region === 'all' ? members : members.filter((m) => m.region === region)
+    if (district !== 'all') subset = subset.filter((m) => m.district === district)
+    return Array.from(new Set(subset.map((m) => m.ward))).sort()
+  }, [members, region, district])
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return members.filter((m) => {
       if (needle) {
-        const haystack = `${m.centre_name} ${m.ward} ${m.district}`.toLowerCase()
+        const haystack = `${m.centre_name} ${m.region ?? ''} ${m.ward} ${m.district}`.toLowerCase()
         if (!haystack.includes(needle)) return false
       }
+      if (region !== 'all' && m.region !== region) return false
       if (ward !== 'all' && m.ward !== ward) return false
       if (district !== 'all' && m.district !== district) return false
       if (quality !== 'all' && (m.latest_quality ?? '') !== quality) return false
       if (license !== 'all' && m.license_status !== license) return false
       return true
     })
-  }, [members, search, ward, district, quality, license])
+  }, [members, search, region, ward, district, quality, license])
 
-  const activeFilters = (search ? 1 : 0) + (ward !== 'all' ? 1 : 0) + (district !== 'all' ? 1 : 0) + (quality !== 'all' ? 1 : 0) + (license !== 'all' ? 1 : 0)
+  const activeFilters = (search ? 1 : 0) + (region !== 'all' ? 1 : 0) + (ward !== 'all' ? 1 : 0) + (district !== 'all' ? 1 : 0) + (quality !== 'all' ? 1 : 0) + (license !== 'all' ? 1 : 0)
 
   function clearAll() {
     setSearch('')
+    setRegion('all')
     setWard('all')
     setDistrict('all')
     setQuality('all')
@@ -92,6 +105,7 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
   function exportCsv() {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
+    if (region !== 'all') params.set('region', region)
     if (ward !== 'all') params.set('ward', ward)
     if (district !== 'all') params.set('district', district)
     if (quality !== 'all') params.set('quality', quality)
@@ -110,11 +124,17 @@ export function MembersTable({ members, readOnly = false, initialFilters = {} }:
         }}
       >
         <input
-          placeholder="Search name, ward, district…"
+          placeholder="Search name, region, ward, district…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ padding: '0.5rem 0.7rem', border: '1px solid var(--border)', borderRadius: 8 }}
         />
+        <select value={region} onChange={(e) => { setRegion(e.target.value); setDistrict('all'); setWard('all') }} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid var(--border)' }}>
+          <option value="all">All regions</option>
+          {regions.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
         <select value={district} onChange={(e) => setDistrict(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid var(--border)' }}>
           <option value="all">All districts</option>
           {districts.map((d) => (

@@ -30,6 +30,7 @@ export interface Member {
   org_id: string
   centre_name: string
   owner_user_id: string | null
+  region: string | null
   ward: string
   district: string
   address: string | null

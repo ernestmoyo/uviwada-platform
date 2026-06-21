@@ -16,6 +16,7 @@ export type MembershipStatus = 'pending' | 'approved' | 'rejected'
 export interface AdminMember {
   id: string
   centre_name: string
+  region: string | null
   ward: string
   district: string
   phone: string
@@ -81,6 +82,7 @@ export interface AdminTenantStats {
 interface MemberRow {
   id: string
   centre_name: string
+  region: string | null
   ward: string
   district: string
   phone: string
@@ -106,7 +108,7 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
     let baseQ = supabase
       .from('members')
       .select(
-        'id, centre_name, ward, district, phone, email, children_count, caregiver_count, license_status, license_number, license_expiry, latest_quality, joined_at'
+        'id, centre_name, region, ward, district, phone, email, children_count, caregiver_count, license_status, license_number, license_expiry, latest_quality, joined_at'
       )
     if (!national) baseQ = baseQ.eq('org_id', orgId)
     const { data } = await baseQ.order('centre_name')

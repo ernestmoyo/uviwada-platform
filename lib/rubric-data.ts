@@ -7,6 +7,7 @@ import fallback from './rubric-fallback.json'
 
 export interface RubricCentre {
   name: string
+  region: string | null
   council: string | null
   ward: string | null
   lat: number | null
@@ -54,6 +55,7 @@ function rawToCentre(raw: Record<string, unknown>, tier: string | null): RubricC
   const r = raw as Record<string, never>
   return {
     name: (r['name'] as unknown as string) ?? '—',
+    region: (r['region'] as unknown as string) ?? null,
     council: (r['council'] as unknown as string) ?? null,
     ward: (r['ward'] as unknown as string) ?? null,
     lat: (r['lat'] as unknown as number) ?? null,

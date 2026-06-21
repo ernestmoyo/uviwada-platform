@@ -13,6 +13,7 @@ export const revalidate = 0
 interface AdminMembersPageProps {
   searchParams?: {
     q?: string
+    region?: string
     ward?: string
     district?: string
     quality?: string
@@ -30,6 +31,7 @@ export default async function AdminMembersPage({ searchParams }: AdminMembersPag
   const readOnly = user.role === 'cic_staff'
   const initialFilters = {
     q: searchParams?.q,
+    region: searchParams?.region,
     ward: searchParams?.ward,
     district: searchParams?.district,
     quality: searchParams?.quality,

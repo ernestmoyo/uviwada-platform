@@ -12,14 +12,18 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url)
   const q = url.searchParams.get('q')?.toLowerCase()
+  const region = url.searchParams.get('region')
   const ward = url.searchParams.get('ward')
+  const district = url.searchParams.get('district')
   const quality = url.searchParams.get('quality')
   const license = url.searchParams.get('license')
 
   const tenantId = getCurrentTenantId()
   let members = await fetchMembersForOrg(tenantId)
   if (q) members = members.filter((m) => m.centre_name.toLowerCase().includes(q))
+  if (region) members = members.filter((m) => m.region === region)
   if (ward) members = members.filter((m) => m.ward === ward)
+  if (district) members = members.filter((m) => m.district === district)
   if (quality) members = members.filter((m) => (m.latest_quality ?? '') === quality)
   if (license) members = members.filter((m) => m.license_status === license)
 

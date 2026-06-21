@@ -16,6 +16,7 @@ export interface DirectoryCentre {
   slug: string
   index: number
   name: string
+  region: string | null
   council: string | null
   ward: string | null
   ownership: string | null
@@ -55,6 +56,7 @@ export function toDirectoryCentre(c: RubricCentre, index: number): DirectoryCent
     slug: `${slugify(c.name)}--${index}`,
     index,
     name: c.name,
+    region: c.region,
     council: c.council,
     ward: c.ward,
     ownership: c.ownership,

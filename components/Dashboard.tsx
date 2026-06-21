@@ -14,10 +14,11 @@ import {
   ownershipDist,
   registrationDist,
   tierStats,
-  uniqueCouncils,
-  wardsForCouncil,
+  uniqueRegions,
+  councilsForRegion,
   pct
 } from '@/lib/sector'
+import { regionOptions } from '@/lib/regions'
 
 const TRAFFIC = { green: '#22c55e', amber: '#f59e0b', red: '#ef4444' }
 
@@ -30,19 +31,28 @@ interface DashboardProps {
 export function Dashboard({ centres: all, meta, source }: DashboardProps) {
   const { lang } = useI18n()
   const sw = lang === 'sw'
+  const [region, setRegion] = useState('All')
   const [council, setCouncil] = useState('All')
   const [ward, setWard] = useState('All')
 
-  const councils = useMemo(() => ['All', ...uniqueCouncils(all)], [all])
-  const wardOptions = useMemo(() => wardsForCouncil(all, council), [all, council])
+  const dataRegions = useMemo(() => uniqueRegions(all), [all])
+  const regionOpts = useMemo(() => regionOptions(dataRegions), [dataRegions])
+  const regionComingSoon = region !== 'All' && !(regionOpts.find((r) => r.value === region)?.live)
+  const councils = useMemo(() => ['All', ...councilsForRegion(all, region)], [all, region])
+  const wardOptions = useMemo(() => {
+    let subset = region === 'All' ? all : all.filter((c) => c.region === region)
+    if (council !== 'All') subset = subset.filter((c) => c.council === council)
+    return Array.from(new Set(subset.map((c) => c.ward).filter((w): w is string => !!w))).sort()
+  }, [all, region, council])
   const centres = useMemo(
     () =>
       all.filter(
         (c) =>
+          (region === 'All' || c.region === region) &&
           (council === 'All' || c.council === council) &&
           (ward === 'All' || c.ward === ward)
       ),
-    [all, council, ward]
+    [all, region, council, ward]
   )
 
   const k = useMemo(() => computeKpis(centres), [centres])
@@ -82,6 +92,22 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
         {/* Filter */}
         <div className="dash-filterbar">
           <label className="dash-filter">
+            <span>{sw ? 'Mkoa' : 'Province/Region'}</span>
+            <select
+              value={region}
+              onChange={(e) => {
+                setRegion(e.target.value)
+                setCouncil('All')
+                setWard('All')
+              }}
+            >
+              <option value="All">{sw ? 'Mikoa yote' : 'All regions'}</option>
+              {regionOpts.map((r) => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="dash-filter">
             <span>{sw ? 'Halmashauri' : 'Council'}</span>
             <select
               value={council}
@@ -113,6 +139,13 @@ export function Dashboard({ centres: all, meta, source }: DashboardProps) {
             {sw ? 'vituo' : 'centres'}
           </span>
         </div>
+
+        {regionComingSoon && (
+          <div style={{ background: '#EEF2F6', border: '1px dashed #9FB6CE', borderRadius: 10, padding: '0.9rem 1rem', margin: '0 0 1rem', fontSize: '0.85rem', color: 'var(--primary-dark, #0F3D6E)' }}>
+            <strong>{region}: {sw ? 'takwimu zinakuja hivi karibuni' : 'data coming soon'}.</strong>{' '}
+            <span style={{ color: 'var(--muted)' }}>{sw ? 'Tathmini katika mkoa huu bado. Chagua Dar es Salaam kuona data hai.' : 'Assessments for this region are not live yet — select Dar es Salaam or “All regions” for live figures.'}</span>
+          </div>
+        )}
 
         {/* Animated KPI strip — the figures donors see first */}
         <div className="kpi-grid">

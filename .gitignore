@@ -29,3 +29,5 @@ lib/site-packages/
 scripts/__pycache__/
 scripts/pip*.exe
 scripts/vba_extract.py
+
+.vercel

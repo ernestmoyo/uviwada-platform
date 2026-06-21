@@ -1,11 +1,18 @@
-// load-rubric.mjs — load the 234 real DCC rubric records into Supabase.
+// load-rubric.mjs — load the real DCC rubric records into Supabase.
 //
 // SAFETY: dry-run by default. It ALWAYS writes a backup first and NEVER mutates
-// unless you pass --apply. Demo-seed deletion is scoped to the 35 known seed
-// UUIDs (never a blanket truncate). Idempotent: re-running --apply upserts.
+// unless you pass --apply. Demo-seed deletion is scoped to the 35 KNOWN seed
+// UUIDs only (never `dcc_uid is null`, never a blanket truncate) — so real
+// centres that self-registered through the platform (which also have a null
+// dcc_uid) are NEVER deleted. Idempotent: re-running --apply upserts.
 //
-//   node scripts/load-rubric.mjs            # dry run + backup, no writes
-//   node scripts/load-rubric.mjs --apply    # backup → delete 35 demo seeds → load 234
+// If any self-registered members exist (dcc_uid null AND not a known demo seed),
+// --apply ABORTS and lists them, unless you explicitly pass --allow-registrations
+// to confirm you have reviewed them. The import never deletes them either way.
+//
+//   node scripts/load-rubric.mjs                         # dry run + backup, no writes
+//   node scripts/load-rubric.mjs --apply                 # backup → delete 35 demo seeds → load
+//   node scripts/load-rubric.mjs --apply --allow-registrations  # proceed despite real registrations
 //
 // Run from the demo/ directory (resolves @supabase/supabase-js).
 
@@ -18,6 +25,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEMO = resolve(__dirname, '..')
 const ROOT = resolve(DEMO, '..')
 const APPLY = process.argv.includes('--apply')
+const ALLOW_REG = process.argv.includes('--allow-registrations')
+
+// Populated by preflight(): members with a null dcc_uid that are NOT known demo
+// seeds — i.e. real or test self-registrations. The loader must never delete these.
+let REGISTRATIONS = []
+// Whether members.region exists (migration 0008). Region always goes into
+// rubric_assessments.raw (so the public Province/Region filter works regardless);
+// it is written to members.region only when the column is present.
+let HAS_REGION = false
 
 // ---- env (parse .env.local without printing secrets) ------------------------
 function loadEnv() {
@@ -82,8 +98,40 @@ const licenseFromReg = (s) =>
   !s ? 'not_applied' : /^Registered/i.test(s) ? 'fully_licensed' : /provisional/i.test(s) ? 'pending' : 'not_applied'
 
 // ---- load records -----------------------------------------------------------
-const records = JSON.parse(readFileSync(resolve(ROOT, 'upgrade', 'analysis', 'data', 'records.clean.json'), 'utf8'))
+// New full clean dataset (243 centres). The records carry 0–1 scores + a `tier`
+// and per-domain objects; the platform expects 0–100 `infra_score`/`capacity_score`,
+// an `infra_result` (1–4) and `infra_tier`, read out of `rubric_assessments.raw`.
+// We normalise to the platform shape here so the app + rawToCentre work unchanged.
+const records = JSON.parse(readFileSync(resolve(ROOT, 'analysis', 'data', 'records.clean.json'), 'utf8'))
+// No submission_uuid in this export — dcc_uid is unique per centre, use it as the key.
+for (const r of records) r.submission_uuid = r.submission_uuid || r.dcc_uid
 console.log(`records to load: ${records.length}`)
+
+const meanInfra = (infra) => {
+  const xs = Object.values(infra || {}).filter((v) => Number.isFinite(v))
+  return xs.length ? +(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(2) : null
+}
+const PATHWAY = {
+  'Level 4': 'Standard pathway: centre may be considered for full registration',
+  'Level 3': 'Centre may qualify for operational recognition with continued improvement',
+  'Level 2': 'Centre may be considered for provisional recognition or conditional support',
+  'Level 1': 'Foundational support: safety basics and registration onboarding first'
+}
+// Build the platform-shaped `raw` (0–100 scores, infra_score/result/tier) consumed by rawToCentre.
+function platformRaw(r) {
+  const infraResult = meanInfra(r.infra)
+  return {
+    ...r,
+    region: r.region ?? 'Dar es Salaam',
+    capacity_score: r.capacity_score == null ? null : Math.round(r.capacity_score * 100),
+    capacity_result: r.capacity_result,
+    infra_result: infraResult,
+    infra_score: r.overall_score == null ? null : Math.round(r.overall_score * 100),
+    infra_weighted: r.overall_score == null ? null : Math.round(r.overall_score * 100),
+    infra_tier: r.tier,
+    formalization_pathway: PATHWAY[r.tier] ?? null
+  }
+}
 
 // ---- backup -----------------------------------------------------------------
 async function dumpAll(table, cols = '*') {
@@ -125,7 +173,33 @@ async function preflight() {
     if (probe2.error) console.error(`   members.dcc_uid: ${probe2.error.message}`)
     return false
   }
+  // members.region (0008) is optional — degrade gracefully if absent.
+  const regionProbe = await sb.from('members').select('region').limit(1)
+  HAS_REGION = !regionProbe.error
   console.log('schema probe: rubric tables + member columns present ✓')
+  console.log(HAS_REGION
+    ? 'members.region present ✓ (region written to members + raw)'
+    : '⚠ members.region NOT present — region written to rubric_assessments.raw only. Apply 0008 + re-run to populate members.region (admin table filter).')
+
+  // Protect real self-registrations: members with null dcc_uid that are NOT
+  // known demo seeds. These came in through the platform register flow and must
+  // never be deleted by this loader.
+  const { data: nullUid, error: regErr } = await sb
+    .from('members')
+    .select('id, centre_name, owner_user_id, is_demo, created_at')
+    .is('dcc_uid', null)
+  if (regErr) { console.warn(`  registration probe failed: ${regErr.message}`); return true }
+  const seedSet = new Set(DEMO_SEED_IDS)
+  REGISTRATIONS = (nullUid ?? []).filter((m) => !seedSet.has(m.id))
+  if (REGISTRATIONS.length) {
+    console.log(`\n⚠ ${REGISTRATIONS.length} self-registered member(s) detected (null dcc_uid, not a demo seed):`)
+    for (const m of REGISTRATIONS) {
+      console.log(`   - ${m.centre_name}  (id=${m.id}, owner_user_id=${m.owner_user_id ?? 'none'}, is_demo=${m.is_demo})`)
+    }
+    console.log('   These will NOT be deleted. Pass --allow-registrations to run --apply alongside them.')
+  } else {
+    console.log('no self-registered members found (only known demo seeds carry a null dcc_uid).')
+  }
   return true
 }
 
@@ -135,6 +209,7 @@ function memberRow(r) {
     org_id: ORG_DAR,
     dcc_uid: r.dcc_uid,
     centre_name: r.name,
+    ...(HAS_REGION ? { region: r.region ?? 'Dar es Salaam' } : {}),
     ward: r.ward ?? 'Unknown',
     district: r.council ?? 'Dar es Salaam',
     council: r.council,
@@ -159,29 +234,43 @@ function memberRow(r) {
     ownership_type: r.ownership_type,
     registration_status_detail: r.registration_status,
     license_status: licenseFromReg(r.registration_status),
-    latest_quality: tierToTraffic(r.infra_tier),
+    latest_quality: tierToTraffic(r.tier),
     is_demo: false
   }
 }
 
 async function apply() {
+  // 0. refuse to proceed if real registrations exist and were not acknowledged.
+  if (REGISTRATIONS.length && !ALLOW_REG) {
+    throw new Error(
+      `${REGISTRATIONS.length} self-registered member(s) present. Review the list above, then ` +
+      `re-run with --apply --allow-registrations to confirm. (They will not be deleted.)`
+    )
+  }
+
   // 1. backup
   await backup()
 
-  // 2. remove all current demo/test members for a clean 234.
-  //    Real imported centres are the only rows that carry a dcc_uid, so deleting
-  //    `dcc_uid is null` removes the 35 seeds + the ~9 demo registrations in one
-  //    scoped, idempotent predicate (re-running never touches the loaded 234).
-  const { data: toDelete } = await sb.from('members').select('id, centre_name, dcc_uid').is('dcc_uid', null)
+  // 2. remove ONLY the 35 known demo seed members (scoped by exact UUID).
+  //    We deliberately do NOT delete `dcc_uid is null`, because real centres that
+  //    self-registered through the platform also have a null dcc_uid and must be
+  //    preserved. The dcc_uid-keyed import below never touches registration rows.
+  const { data: toDelete } = await sb
+    .from('members')
+    .select('id, centre_name')
+    .in('id', DEMO_SEED_IDS)
   const list = toDelete ?? []
-  console.log(`members to remove (no dcc_uid): ${list.length}`)
+  console.log(`demo seed members to remove (of 35 known): ${list.length}`)
   for (const m of list) console.log(`   - ${m.centre_name}`)
   if (list.length) {
-    const { error } = await sb.from('members').delete().is('dcc_uid', null)
-    if (error) throw new Error('member cleanup failed: ' + error.message)
-    console.log(`deleted ${list.length} demo/test members (cascaded their assessments).`)
+    const { error } = await sb.from('members').delete().in('id', DEMO_SEED_IDS)
+    if (error) throw new Error('demo-seed cleanup failed: ' + error.message)
+    console.log(`deleted ${list.length} demo seed members (cascaded their assessments).`)
   } else {
-    console.log('no demo/test members to delete.')
+    console.log('no demo seed members to delete.')
+  }
+  if (REGISTRATIONS.length) {
+    console.log(`preserved ${REGISTRATIONS.length} self-registered member(s) (--allow-registrations).`)
   }
 
   // 3. insert members. Idempotent without ON CONFLICT (the dcc_uid unique index
@@ -204,24 +293,27 @@ async function apply() {
     await sb.from('rubric_assessments').delete().in('submission_uuid', chunk)
   }
 
-  const assessRows = records.map((r) => ({
+  const assessRows = records.map((r) => {
+    const pr = platformRaw(r) // 0–100 scores, infra_result/tier/pathway
+    return {
     member_id: idByUid[r.dcc_uid],
     submission_uuid: r.submission_uuid,
     assessment_type: r.assessment_type,
     assessed_on: r.assessed_on,
     gps_lat: r.lat,
     gps_lng: r.lng,
-    capacity_result: r.capacity_result,
-    capacity_score: r.capacity_score,
-    infra_result: r.infra_result,
-    infra_score: r.infra_score,
-    infra_weighted: r.infra_weighted,
-    infra_tier: r.infra_tier,
-    formalization_pathway: r.formalization_pathway,
+    capacity_result: pr.capacity_result,
+    capacity_score: pr.capacity_score,
+    infra_result: pr.infra_result,
+    infra_score: pr.infra_score,
+    infra_weighted: pr.infra_weighted,
+    infra_tier: pr.infra_tier,
+    formalization_pathway: pr.formalization_pathway,
     assessor_comments: r.assessor_comments,
     source: 'import',
-    raw: r
-  })).filter((a) => a.member_id)
+    raw: pr
+    }
+  }).filter((a) => a.member_id)
 
   const assessIdBySub = {}
   for (const chunk of chunks(assessRows, 150)) {
@@ -265,7 +357,11 @@ if (!ok) process.exit(1)
 if (!APPLY) {
   console.log('\nDRY RUN — writing backup only, no mutations. Re-run with --apply to load.')
   await backup()
-  console.log('\nWould: delete up to 35 demo seeds, upsert 234 members, insert 234 rubric assessments + ~6,318 domain rows.')
+  const n = records.length
+  console.log(`\nWould: delete up to 35 demo seeds, upsert ${n} members, insert ${n} rubric assessments + ~${n * 27} domain rows.`)
+  if (REGISTRATIONS.length) {
+    console.log(`Would ABORT on --apply (without --allow-registrations): ${REGISTRATIONS.length} self-registered member(s) present (see list above).`)
+  }
 } else {
   console.log('\n--apply: performing backup → delete demo seeds → load …')
   await apply()

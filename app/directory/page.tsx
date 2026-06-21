@@ -2,8 +2,10 @@ import Link from 'next/link'
 
 import { TopBar } from '@/components/TopBar'
 import { DirectoryExplorer } from '@/components/directory/DirectoryExplorer'
+import { RegionMap } from '@/components/RegionMap'
 import { fetchRubricSnapshot } from '@/lib/rubric-data'
 import { buildDirectory } from '@/lib/directory'
+import { regionOptions } from '@/lib/regions'
 
 export const revalidate = 60
 
@@ -17,6 +19,8 @@ export default async function DirectoryPage() {
   const centres = buildDirectory(snapshot)
   const councils = Array.from(new Set(centres.map((c) => c.council).filter((x): x is string => !!x))).sort()
   const ownerships = Array.from(new Set(centres.map((c) => c.ownership).filter((x): x is string => !!x))).sort()
+  const dataRegions = Array.from(new Set(centres.map((c) => c.region).filter((x): x is string => !!x)))
+  const regions = regionOptions(dataRegions)
   const dc = snapshot.meta.dataCompleteness
 
   return (
@@ -50,7 +54,16 @@ export default async function DirectoryPage() {
             sector visibility. They are not yet consented public listings — contact details and photos are not published, and
             locations are approximate. Parents should make their own enquiries before enrolling a child.
           </div>
-          <DirectoryExplorer centres={centres} councils={councils} ownerships={ownerships} />
+          <details className="u-card" style={{ marginBottom: '1.25rem', padding: '1rem 1.25rem' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--primary-dark, #0F3D6E)' }}>
+              National coverage — {dataRegions.length} of 31 regions live, more coming soon
+            </summary>
+            <p style={{ color: 'var(--muted)', fontSize: '0.85rem', margin: '0.5rem 0 0.75rem' }}>
+              Assessment data is live for {dataRegions.join(', ') || 'Dar es Salaam'}. The remaining regions are on the roadmap and will appear here as they are assessed.
+            </p>
+            <RegionMap liveRegions={dataRegions} />
+          </details>
+          <DirectoryExplorer centres={centres} regions={regions} councils={councils} ownerships={ownerships} />
         </div>
       </section>
     </main>

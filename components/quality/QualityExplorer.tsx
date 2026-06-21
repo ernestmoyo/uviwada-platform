@@ -4,10 +4,12 @@ import { useMemo, useState } from 'react'
 
 import type { RubricSnapshot, RubricCentre } from '@/lib/rubric-data'
 import { INFRA_SUBDOMAINS, tierLabelToTrafficLight } from '@/lib/rubric'
+import { regionOptions } from '@/lib/regions'
 import { RubricMap, type RubricMapPoint } from './RubricMap'
 
 const TRAFFIC = { green: '#22c55e', amber: '#f59e0b', red: '#ef4444' }
-const tierShort = (t: string | null) => (!t ? 'Pending' : t.includes('Level 4') ? 'Level 4' : t.includes('Level 3') ? 'Level 3' : 'Level 2')
+const LEVEL_COLOR: Record<string, string> = { 'Level 4': '#22c55e', 'Level 3': '#84cc16', 'Level 2': '#f59e0b', 'Level 1': '#ef4444' }
+const tierShort = (t: string | null) => (!t ? 'Pending' : t.includes('Level 4') ? 'Level 4' : t.includes('Level 3') ? 'Level 3' : t.includes('Level 1') ? 'Level 1' : 'Level 2')
 
 function mean(xs: Array<number | null | undefined>): number | null {
   const v = xs.filter((x): x is number => typeof x === 'number' && Number.isFinite(x))
@@ -22,29 +24,38 @@ const fmt = (n: number | null | undefined) => (n == null ? '—' : Math.round(n)
 
 export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
   const all = snapshot.centres
+  const [region, setRegion] = useState<string>('All')
   const [council, setCouncil] = useState<string>('All')
   const [ward, setWard] = useState<string>('All')
   const [ownership, setOwnership] = useState<string>('All')
   const [tier, setTier] = useState<string>('All')
 
-  const councils = useMemo(() => ['All', ...uniq(all.map((c) => c.council))], [all])
+  const dataRegions = useMemo(() => uniq(all.map((c) => c.region)), [all])
+  const regionOpts = useMemo(() => regionOptions(dataRegions), [dataRegions])
+  const regionComingSoon = region !== 'All' && !(regionOpts.find((r) => r.value === region)?.live)
+  const councils = useMemo(() => {
+    const subset = region === 'All' ? all : all.filter((c) => c.region === region)
+    return ['All', ...uniq(subset.map((c) => c.council))]
+  }, [all, region])
   const wardOptions = useMemo(() => {
-    const subset = council === 'All' ? all : all.filter((c) => c.council === council)
+    let subset = region === 'All' ? all : all.filter((c) => c.region === region)
+    if (council !== 'All') subset = subset.filter((c) => c.council === council)
     return ['All', ...uniq(subset.map((c) => c.ward))]
-  }, [all, council])
+  }, [all, region, council])
   const ownerships = useMemo(() => ['All', ...uniq(all.map((c) => c.ownership))], [all])
-  const tiers = ['All', 'Level 4', 'Level 3', 'Level 2']
+  const tiers = ['All', 'Level 4', 'Level 3', 'Level 2', 'Level 1']
 
   const centres = useMemo(
     () =>
       all.filter(
         (c) =>
+          (region === 'All' || c.region === region) &&
           (council === 'All' || c.council === council) &&
           (ward === 'All' || c.ward === ward) &&
           (ownership === 'All' || c.ownership === ownership) &&
           (tier === 'All' || tierShort(c.tier) === tier)
       ),
-    [all, council, ward, ownership, tier]
+    [all, region, council, ward, ownership, tier]
   )
 
   const k = useMemo(() => kpis(centres), [centres])
@@ -73,6 +84,7 @@ export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
 
       {/* filters */}
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+        <Filter label="Province/Region" value={region} options={['All', ...regionOpts.map((r) => r.value)]} optionLabels={Object.fromEntries(regionOpts.map((r) => [r.value, r.label]))} onChange={(v) => { setRegion(v); setCouncil('All'); setWard('All') }} />
         <Filter label="Council" value={council} options={councils} onChange={(v) => { setCouncil(v); setWard('All') }} />
         <Filter label="Ward" value={ward} options={wardOptions} onChange={setWard} />
         <Filter label="Ownership" value={ownership} options={ownerships} onChange={setOwnership} />
@@ -81,6 +93,13 @@ export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
           Showing <strong>{centres.length}</strong> of {all.length} centres
         </div>
       </div>
+
+      {regionComingSoon && (
+        <div style={{ background: '#EEF2F6', border: '1px dashed #9FB6CE', borderRadius: 10, padding: '1.25rem', marginBottom: '1.25rem', textAlign: 'center' }}>
+          <div style={{ fontWeight: 700, color: 'var(--primary-dark, #0F3D6E)' }}>{region}: data coming soon</div>
+          <p style={{ color: 'var(--muted)', marginTop: '0.35rem', fontSize: '0.85rem' }}>Centre assessments for this region are not live yet — no figures to show. Select Dar es Salaam (or “All regions”) to see live data.</p>
+        </div>
+      )}
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
@@ -103,8 +122,8 @@ export function QualityExplorer({ snapshot }: { snapshot: RubricSnapshot }) {
           {k.tierScoredN === 0 ? (
             <Empty />
           ) : (
-            ['Level 4', 'Level 3', 'Level 2'].map((t) => (
-              <Bar key={t} label={t} value={k.tierScored[t] ?? 0} max={k.tierScoredN} color={t === 'Level 4' ? TRAFFIC.green : t === 'Level 3' ? TRAFFIC.amber : TRAFFIC.red} suffix={` (${pct(k.tierScored[t] ?? 0, k.tierScoredN)}%)`} />
+            (['Level 4', 'Level 3', 'Level 2', 'Level 1'] as const).map((t) => (
+              <Bar key={t} label={t} value={k.tierScored[t] ?? 0} max={k.tierScoredN} color={LEVEL_COLOR[t]} suffix={` (${pct(k.tierScored[t] ?? 0, k.tierScoredN)}%)`} />
             ))
           )}
           {k.tierPending > 0 && (
@@ -207,13 +226,13 @@ function countBy(cs: RubricCentre[], pick: (c: RubricCentre) => string | null): 
 }
 
 // ---- UI atoms ---------------------------------------------------------------
-function Filter({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+function Filter({ label, value, options, onChange, optionLabels }: { label: string; value: string; options: string[]; onChange: (v: string) => void; optionLabels?: Record<string, string> }) {
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
       {label}
       <select value={value} onChange={(e) => onChange(e.target.value)} style={{ padding: '0.45rem 0.6rem', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: '0.85rem', minWidth: 160, background: '#fff', color: 'var(--ink, #1a1a1a)' }}>
         {options.map((o) => (
-          <option key={o} value={o}>{o}</option>
+          <option key={o} value={o}>{optionLabels?.[o] ?? o}</option>
         ))}
       </select>
     </label>

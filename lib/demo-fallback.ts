@@ -284,6 +284,7 @@ export function listDemoMembersForOrg(orgId: string): AdminMember[] {
   return DEMO_CENTRES.map((c) => ({
     id: c.id,
     centre_name: c.centre_name,
+    region: 'Dar es Salaam',
     ward: c.ward,
     district: c.district,
     phone: c.phone,

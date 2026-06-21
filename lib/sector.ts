@@ -11,7 +11,7 @@ import type { PublicCentre } from './data'
 import { INFRA_SUBDOMAINS, tierLabelToTrafficLight } from './rubric'
 import type { QualityRating } from './types/database'
 
-export type TierShort = 'Level 4' | 'Level 3' | 'Level 2' | 'Pending'
+export type TierShort = 'Level 4' | 'Level 3' | 'Level 2' | 'Level 1' | 'Pending'
 
 export interface SectorKpis {
   centres: number
@@ -39,7 +39,7 @@ export interface ScoreRow {
 }
 
 export interface TierStats {
-  scored: Record<'Level 4' | 'Level 3' | 'Level 2', number>
+  scored: Record<'Level 4' | 'Level 3' | 'Level 2' | 'Level 1', number>
   scoredN: number
   pending: number
 }
@@ -76,6 +76,7 @@ export function tierShort(t: string | null | undefined): TierShort {
   if (!t) return 'Pending'
   if (t.includes('Level 4')) return 'Level 4'
   if (t.includes('Level 3')) return 'Level 3'
+  if (t.includes('Level 1')) return 'Level 1'
   return 'Level 2'
 }
 
@@ -101,6 +102,13 @@ export function tierMeaning(t: TierShort, sw: boolean): { title: string; note: s
         note: sw
           ? 'Kiko kwenye njia ya kuboresha kwa msaada — si kufeli.'
           : 'On the improvement pathway with support — not failing.'
+      }
+    case 'Level 1':
+      return {
+        title: sw ? 'Kiwango cha msingi' : 'Foundational',
+        note: sw
+          ? 'Hatua za awali za usalama na usajili kwanza — kwa msaada.'
+          : 'Safety basics and registration onboarding first — with support.'
       }
     default:
       return {
@@ -138,7 +146,7 @@ export function computeKpis(cs: RubricCentre[]): SectorKpis {
 // honestly as "pending".
 export function tierStats(cs: RubricCentre[]): TierStats {
   const scoredCentres = cs.filter((c) => c.infra_score != null)
-  const scored: TierStats['scored'] = { 'Level 4': 0, 'Level 3': 0, 'Level 2': 0 }
+  const scored: TierStats['scored'] = { 'Level 4': 0, 'Level 3': 0, 'Level 2': 0, 'Level 1': 0 }
   for (const c of scoredCentres) {
     const t = tierShort(c.tier)
     if (t !== 'Pending') scored[t] += 1
@@ -187,8 +195,18 @@ export const councilDist = (cs: RubricCentre[]) => countBy(cs, (c) => c.council)
 export const ownershipDist = (cs: RubricCentre[]) => countBy(cs, (c) => c.ownership)
 export const registrationDist = (cs: RubricCentre[]) => countBy(cs, (c) => c.registration)
 
+export function uniqueRegions(cs: RubricCentre[]): string[] {
+  return Array.from(new Set(cs.map((c) => c.region).filter((x): x is string => !!x))).sort()
+}
+
 export function uniqueCouncils(cs: RubricCentre[]): string[] {
   return Array.from(new Set(cs.map((c) => c.council).filter((x): x is string => !!x))).sort()
+}
+
+// Councils within a region selection ('All' → every council).
+export function councilsForRegion(cs: RubricCentre[], region: string): string[] {
+  const subset = region === 'All' ? cs : cs.filter((c) => c.region === region)
+  return Array.from(new Set(subset.map((c) => c.council).filter((x): x is string => !!x))).sort()
 }
 
 // Returns sorted unique ward names for a given council selection.
