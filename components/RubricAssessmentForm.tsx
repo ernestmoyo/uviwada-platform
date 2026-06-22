@@ -158,7 +158,7 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
         {submitting ? 'Saving…' : tier ? `Save assessment · ${tier.tier}` : 'Save assessment'}
       </button>
     </form>
-    {savedMemberId && <AiRecommendations memberId={savedMemberId} />}
+    {savedMemberId && <AiRecommendations memberId={savedMemberId} centreName={members.find((m) => m.id === savedMemberId)?.centre_name} />}
    </>
   )
 }

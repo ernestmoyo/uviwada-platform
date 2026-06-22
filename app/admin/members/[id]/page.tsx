@@ -93,7 +93,7 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
             <MembershipReview memberId={member.id} status={member.membership_status} readOnly={!canModerate} />
           </div>
 
-          <AiRecommendations memberId={member.id} />
+          <AiRecommendations memberId={member.id} centreName={member.centre_name} />
 
           <div style={{ marginBottom: '1.5rem' }}>
             <AuditLog title="Membership status history" entries={logs} />

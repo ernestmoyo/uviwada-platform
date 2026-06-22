@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
 import { AdminNav } from '@/components/AdminNav'
+import { AiRecommendations } from '@/components/AiRecommendations'
 import { AuditLog } from '@/components/journey2/AuditLog'
 import { ProfileModeration } from '@/components/journey2/ProfileModeration'
 import { MembershipBadge } from '@/components/journey2/StatusBadges'
@@ -67,6 +68,7 @@ export default async function ProfileModerationPage({ params }: { params: { id: 
                 sections={sections}
                 readOnly={!canModerate}
               />
+              <AiRecommendations memberId={member.id} centreName={member.centre_name} />
               <div style={{ marginTop: '1.25rem' }}>
                 <AuditLog title="Public profile status history" entries={logs} />
               </div>
