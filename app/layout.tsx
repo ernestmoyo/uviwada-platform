@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     'UVIWATA digital platform connecting, supporting and elevating daycare centres in Tanzania in partnership with Children in Crossfire.',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/logo.svg',
+    icon: '/uviwata_logo.png',
     apple: '/main_logo.png'
   }
 }

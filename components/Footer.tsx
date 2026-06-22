@@ -11,7 +11,7 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Image src="/logo.svg" alt="UVIWATA" width={140} height={44} className="logo-img" />
+            <Image src="/uviwata_logo.png" alt="UVIWATA" width={178} height={100} className="logo-img" style={{ height: 44, width: 'auto' }} />
             <p>
               {lang === 'sw'
                 ? 'Chama cha Kitaifa cha Wamiliki wa Vituo vya Malezi Tanzania (UVIWATA). Kuimarisha sekta ya malezi ya watoto kupitia uratibu, uwakilishi na huduma za kidijitali — likianza Dar es Salaam kupitia UVIWADA, mkoa wa mwanzilishi.'

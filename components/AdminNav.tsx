@@ -100,7 +100,7 @@ export function AdminNav({ fullName, role, currentTenantId, demoMode = false }: 
         }}
       >
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Image src="/logo.svg" alt="UVIWATA" width={120} height={36} style={{ height: 32, width: 'auto' }} />
+          <Image src="/uviwata_logo.png" alt="UVIWATA" width={178} height={100} style={{ height: 32, width: 'auto' }} />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           {showTenantSwitcher && <TenantSwitcher currentTenantId={currentTenantId} />}

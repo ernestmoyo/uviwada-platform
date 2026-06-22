@@ -45,7 +45,7 @@ export function PortalNav({ fullName, ward, role, demoMode = false }: PortalNavP
         }}
       >
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Image src="/logo.svg" alt="UVIWATA" width={120} height={36} style={{ height: 36, width: 'auto' }} />
+          <Image src="/uviwata_logo.png" alt="UVIWATA" width={178} height={100} style={{ height: 36, width: 'auto' }} />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ textAlign: 'right', fontSize: '0.85rem' }}>
