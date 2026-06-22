@@ -34,7 +34,6 @@ export function Footer() {
               className="footer-cic-logo"
             />
             <span>Children in Crossfire</span>
-            <span>Conrad N. Hilton Foundation</span>
             <span>{lang === 'sw' ? 'Mpango wa NMECDP' : 'NMECDP Framework'}</span>
           </div>
         </div>

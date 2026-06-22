@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useI18n } from '@/lib/i18n'
 import { fmtNum } from '@/lib/format'
 import { TZ_REGIONS } from '@/lib/regions'
@@ -36,8 +38,8 @@ export function RegionalStructure({ centres, councils, children, liveRegions = [
         </div>
 
         <div className="reg-grid">
-          {/* Active founding region */}
-          <div className="reg-card reg-card-active">
+          {/* Active founding region — clicking opens the full Dar es Salaam directory */}
+          <Link href="/directory" className="reg-card reg-card-active" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             <div className="reg-card-head">
               <div className="reg-status-pill reg-status-active">
                 {sw ? 'Inafanya Kazi' : 'Active'}
@@ -65,7 +67,10 @@ export function RegionalStructure({ centres, councils, children, liveRegions = [
                 <span className="reg-stat-label">{sw ? 'Watoto' : 'Children'}</span>
               </div>
             </div>
-          </div>
+            <span className="reg-view-link" style={{ display: 'inline-block', marginTop: '0.9rem', fontWeight: 700, color: 'var(--primary, #1A5FAA)', fontSize: '0.9rem' }}>
+              {sw ? 'Tazama vituo vyote vya Dar es Salaam →' : 'View all Dar es Salaam centres →'}
+            </span>
+          </Link>
 
           {/* Roadmap regions — every Tanzania region not yet live */}
           {roadmapRegions.map((region) => (

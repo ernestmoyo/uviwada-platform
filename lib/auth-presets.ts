@@ -19,8 +19,8 @@ export const SEED_USER_PRESETS = [
   {
     id: '00000000-0000-0000-0000-000000000103',
     role: 'cic_staff' as const,
-    label_sw: 'Afisa wa Programu CiC',
-    label_en: 'CiC Programme Officer'
+    label_sw: 'Afisa wa Programu',
+    label_en: 'Programme Officer'
   },
   {
     id: '00000000-0000-0000-0000-000000000104',
