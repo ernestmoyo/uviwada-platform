@@ -128,10 +128,19 @@ async function syncAssessment(db: SupabaseLike, item: SyncItem, rubric: RubricCt
   return { clientId: item.clientId, status: 'accepted', id: assessmentId }
 }
 
+const LICENSE_STATUSES = new Set(['fully_licensed', 'pending', 'not_applied'])
+
 async function syncRegistration(db: SupabaseLike, item: SyncItem): Promise<SyncResult> {
+  // Mirrors the web /api/members/register field set. All fields beyond
+  // centreName/phone are optional with safe defaults, so a short-form capture
+  // still works while a full capture lands the same data as the web form.
   const p = item.payload as {
-    centreName?: string; ownerName?: string; phone?: string; ward?: string
-    children?: number; gps?: { lat?: number; lng?: number } | null
+    centreName?: string; ownerName?: string; phone?: string; email?: string
+    ward?: string; district?: string; address?: string
+    yearFounded?: number; children?: number; caregiverCount?: number
+    ageBand02?: number; ageBand34?: number; ageBand56?: number
+    licenseStatus?: string; licenseNumber?: string; licenseExpiry?: string
+    gps?: { lat?: number; lng?: number } | null
     consent?: { publicListing?: boolean }
   }
   if (!p.centreName || !p.phone) {
@@ -143,17 +152,22 @@ async function syncRegistration(db: SupabaseLike, item: SyncItem): Promise<SyncR
 
   const userId = uuid()
   const memberId = uuid()
+  const licenseStatus = p.licenseStatus && LICENSE_STATUSES.has(p.licenseStatus) ? p.licenseStatus : 'not_applied'
 
   const u = await db.from('app_users').insert({
     id: userId, org_id: UVIWADA_DAR_ORG_ID, role: 'member',
-    full_name: p.ownerName || 'Owner', phone: p.phone, member_id: null, ward: p.ward || null
+    full_name: p.ownerName || 'Owner', email: p.email || null, phone: p.phone, member_id: null, ward: p.ward || null
   })
   if (u.error) throw new Error('app_user insert failed: ' + (u.error.message || ''))
 
   const m = await db.from('members').insert({
     id: memberId, org_id: UVIWADA_DAR_ORG_ID, centre_name: p.centreName, owner_user_id: userId,
-    ward: p.ward || null, district: p.ward || null, lat: p.gps?.lat ?? null, lng: p.gps?.lng ?? null,
-    phone: p.phone, children_count: p.children ?? 0, caregiver_count: 0, license_status: 'not_applied',
+    ward: p.ward || null, district: p.district || p.ward || null, address: p.address || null,
+    lat: p.gps?.lat ?? null, lng: p.gps?.lng ?? null,
+    phone: p.phone, email: p.email || null, year_founded: p.yearFounded ?? null,
+    children_count: p.children ?? 0, caregiver_count: p.caregiverCount ?? 0,
+    age_band_0_2: p.ageBand02 ?? 0, age_band_3_4: p.ageBand34 ?? 0, age_band_5_6: p.ageBand56 ?? 0,
+    license_status: licenseStatus, license_number: p.licenseNumber || null, license_expiry: p.licenseExpiry || null,
     membership_status: 'pending', consent_join: true, consent_public_listing: !!p.consent?.publicListing,
     consent_at: new Date().toISOString(), latest_quality: null
   })
