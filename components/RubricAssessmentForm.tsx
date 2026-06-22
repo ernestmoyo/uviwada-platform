@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
+import { AiRecommendations } from '@/components/AiRecommendations'
 import { useI18n } from '@/lib/i18n'
 import {
   CAPACITY_COMPETENCIES,
@@ -36,6 +37,7 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [savedMemberId, setSavedMemberId] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return
@@ -80,6 +82,7 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
         setError(json.detail ?? json.error ?? 'Failed to save')
       } else {
         setSuccess(`Saved — ${json.tier ?? 'tier pending'}.`)
+        setSavedMemberId(memberId)
         setCapacity({})
         setInfra({})
         setComments('')
@@ -93,6 +96,7 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
   }
 
   return (
+   <>
     <form onSubmit={onSubmit}>
       {/* header: centre + live tier */}
       <div style={{ background: '#fff', borderRadius: 12, padding: '1rem 1.25rem', boxShadow: 'var(--shadow)', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', alignItems: 'center' }}>
@@ -154,6 +158,8 @@ export function RubricAssessmentForm({ members, defaultMemberId }: { members: Ru
         {submitting ? 'Saving…' : tier ? `Save assessment · ${tier.tier}` : 'Save assessment'}
       </button>
     </form>
+    {savedMemberId && <AiRecommendations memberId={savedMemberId} />}
+   </>
   )
 }
 

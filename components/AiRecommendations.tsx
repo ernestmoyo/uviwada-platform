@@ -41,7 +41,7 @@ export function AiRecommendations({ memberId }: { memberId: string }) {
             {t('Mapendekezo kutoka tathmini ya hivi karibuni.', 'Suggestions from the latest assessment.')}
           </p>
         </div>
-        <button onClick={run} disabled={loading} className="btn btn-primary">
+        <button type="button" onClick={run} disabled={loading} className="btn btn-primary">
           {loading ? t('Inachakata…', 'Analysing…') : t('Tengeneza', 'Generate')}
         </button>
       </div>
