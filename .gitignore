@@ -31,3 +31,6 @@ scripts/pip*.exe
 scripts/vba_extract.py
 
 .vercel
+
+# curriculum OCR intermediates
+scripts/curriculum-ocr/
