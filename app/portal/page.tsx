@@ -54,8 +54,12 @@ export default async function PortalPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <MembershipStatusPill memberId={user.member_id} centreName={centre.centre_name} />
-                  <Link href="/portal/curriculum" className="btn">
-                    Curriculum & Lesson Plans →
+                  <Link href="/portal/curriculum" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0.6rem 1.1rem', borderRadius: 10,
+                    background: 'linear-gradient(135deg, #1EB53A, #15923a)', color: '#fff', fontWeight: 800, textDecoration: 'none',
+                    boxShadow: '0 4px 14px rgba(30,181,58,0.28)'
+                  }}>
+                    📚 Curriculum & Lesson Plans →
                   </Link>
                   <Link href="/portal/membership" className="btn btn-primary">
                     Membership & Certificate →

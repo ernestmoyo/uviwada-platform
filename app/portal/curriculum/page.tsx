@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { CurriculumStudio } from '@/components/CurriculumStudio'
@@ -16,15 +17,11 @@ export default async function CurriculumPage() {
   return (
     <>
       <PortalNav fullName={user.full_name} ward={user.ward} role="Member" demoMode={!isSupabaseConfigured()} />
-      <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 60px)', padding: '2rem 0' }}>
+      <main style={{ background: 'var(--bg-alt)', minHeight: 'calc(100vh - 60px)', padding: '1.5rem 0 2.5rem' }}>
         <div className="container">
-          <div style={{ marginBottom: '1.25rem' }}>
-            <span className="section-tag">Curriculum · Mtaala</span>
-            <h1 style={{ fontSize: '1.6rem', margin: '0.4rem 0 0.2rem 0' }}>Curriculum &amp; lesson plans</h1>
-            <div style={{ color: 'var(--muted)', fontSize: '0.92rem' }}>
-              AI-assisted lesson plans from the official NECDP curriculum (ages 2–5). Bilingual · downloadable as Word.
-            </div>
-          </div>
+          <Link href="/portal" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: '1.1rem' }}>
+            ← {'Rudi kwenye kituo · Back to my centre'}
+          </Link>
           <CurriculumStudio />
         </div>
       </main>
