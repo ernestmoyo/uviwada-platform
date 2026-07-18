@@ -15,6 +15,7 @@ import {
   type RubricItem,
   type RubricLevel
 } from '@/lib/rubric'
+import { RUBRIC_LEVELS } from '@/lib/rubric-levels'
 
 export interface RubricFormMember {
   id: string
@@ -168,32 +169,56 @@ function Section({ title, items, values, setValues, lang, showHints }: { title: 
     <fieldset style={{ border: '1px solid var(--border)', borderRadius: 12, padding: '1rem 1.25rem', background: '#fff', marginBottom: '1rem' }}>
       <legend style={{ padding: '0 0.5rem', fontWeight: 700, color: 'var(--primary-dark)' }}>{title}</legend>
       {items.map((it) => (
-        <div key={it.key} style={{ padding: '0.5rem 0', borderTop: '1px solid #f1f5f9' }}>
-          <div style={{ fontSize: '0.9rem', marginBottom: '0.35rem' }}>
+        <div key={it.key} style={{ padding: '0.6rem 0', borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.45rem' }}>
             {lang === 'sw' ? it.sw : it.en}
-            {showHints && it.hint_en && <span style={{ display: 'block', fontSize: '0.74rem', color: 'var(--muted)' }}>{it.hint_en}</span>}
+            {showHints && it.hint_en && <span style={{ display: 'block', fontSize: '0.74rem', color: 'var(--muted)', fontWeight: 400 }}>{it.hint_en}</span>}
           </div>
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          {/* Vertical Level 1–4 picker: each level shows a short descriptor so the
+              assessor knows exactly what the rating means before assigning it. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
             {SCORE_LEVELS.map((lvl) => {
               const active = values[it.key] === lvl.value
+              const desc = RUBRIC_LEVELS[it.key]?.[lvl.value]
+              const text = desc ? (lang === 'sw' ? desc.sw || desc.en : desc.en) : (lang === 'sw' ? lvl.sw : lvl.en)
+              const colour = LEVEL_COLOURS[lvl.value]
               return (
                 <button
                   key={lvl.value}
                   type="button"
                   onClick={() => setValues((p) => ({ ...p, [it.key]: active ? null : lvl.value }))}
-                  title={lang === 'sw' ? lvl.sw : lvl.en}
+                  aria-pressed={active}
                   style={{
-                    minWidth: 38,
-                    padding: '0.3rem 0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '0.45rem 0.6rem',
                     borderRadius: 8,
-                    border: active ? `2px solid ${LEVEL_COLOURS[lvl.value]}` : '1px solid #cbd5e1',
-                    background: active ? LEVEL_COLOURS[lvl.value] : '#fff',
-                    color: active ? '#fff' : '#475569',
-                    fontWeight: 700,
+                    border: active ? `2px solid ${colour}` : '1px solid #e2e8f0',
+                    background: active ? `${colour}14` : '#fff',
                     cursor: 'pointer'
                   }}
                 >
-                  {lvl.value}
+                  <span
+                    style={{
+                      flex: '0 0 auto',
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '0.85rem',
+                      background: active ? colour : '#f1f5f9',
+                      color: active ? '#fff' : '#475569'
+                    }}
+                  >
+                    {lvl.value}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', lineHeight: 1.35, color: active ? '#0f172a' : '#475569' }}>{text}</span>
                 </button>
               )
             })}
