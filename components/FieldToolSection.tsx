@@ -59,6 +59,18 @@ export function FieldToolSection() {
               <li>{lang === 'sw' ? 'Lugha mbili: Kiswahili na Kiingereza' : 'Bilingual Sw / En'}</li>
             </ul>
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <a
+                href="/uviwada-assess.apk"
+                download
+                className="btn"
+                style={{
+                  background: 'var(--primary)',
+                  color: '#fff',
+                  padding: '0.65rem 1.3rem'
+                }}
+              >
+                {lang === 'sw' ? 'Pakua APK (Android)' : 'Download APK (Android)'}
+              </a>
               <InstallPrompt />
               <Link
                 href="/assess"
@@ -75,8 +87,8 @@ export function FieldToolSection() {
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '1rem' }}>
               {lang === 'sw'
-                ? 'Toleo la APK la asili linapatikana baada ya pitch (litaongezwa Vipengele vya kamera + SQLite vya asili).'
-                : 'Native APK build available post-pitch (adds native camera + SQLite plugins via Capacitor).'}
+                ? 'APK ya asili (Capacitor): hufanya kazi bila intaneti, hupata vituo halisi na husawazisha tathmini kwenye jukwaa.'
+                : 'Native Capacitor APK: works offline, loads the real registered centres, and syncs assessments to the platform.'}
             </p>
           </div>
           <div
