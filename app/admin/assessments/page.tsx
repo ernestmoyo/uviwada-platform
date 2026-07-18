@@ -1,10 +1,12 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { fmtDate } from '@/lib/format'
 
 import { AdminNav } from '@/components/AdminNav'
 import { AssessmentForm } from '@/components/AssessmentForm'
-import { fetchAssessmentsForOrg, fetchMembersForOrg } from '@/lib/admin-data'
+import { fetchAssessmentsForOrg, fetchMembersForOrg, fetchRubricAssessmentsForOrg } from '@/lib/admin-data'
 import { getCurrentUser } from '@/lib/auth'
+import { tierLabelToTrafficLight } from '@/lib/rubric'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
 import { getCurrentTenant } from '@/lib/tenant'
 
@@ -18,10 +20,12 @@ export default async function AdminAssessmentsPage() {
   if (user.role === 'cic_staff') redirect('/dashboard')
 
   const tenant = getCurrentTenant()
-  const [members, assessments] = await Promise.all([
+  const [members, assessments, rubricAssessments] = await Promise.all([
     fetchMembersForOrg(tenant.id),
-    fetchAssessmentsForOrg(tenant.id, 30)
+    fetchAssessmentsForOrg(tenant.id, 30),
+    fetchRubricAssessmentsForOrg(tenant.id, 30)
   ])
+  const sourceLabel = (s: string) => (s === 'apk_synced' ? 'Field app' : s === 'web' ? 'Web' : s)
 
   return (
     <>
@@ -41,10 +45,59 @@ export default async function AdminAssessmentsPage() {
           </div>
 
           <aside>
+            <div style={{ background: '#fff', borderRadius: 12, padding: '1.25rem', boxShadow: 'var(--shadow)', marginBottom: '1.25rem' }}>
+              <div style={{ margin: '0 0 0.85rem 0' }}>
+                <h3 style={{ fontSize: '0.95rem', margin: 0, color: 'var(--primary-dark)' }}>
+                  Recent quality assessments ({rubricAssessments.length})
+                </h3>
+                <p style={{ fontSize: '0.72rem', color: 'var(--muted)', margin: '0.2rem 0 0' }}>
+                  27-area rubric — from the web form and the field app (syncs on connect).
+                </p>
+              </div>
+              <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
+                {rubricAssessments.length === 0 && (
+                  <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No quality assessments yet.</p>
+                )}
+                {rubricAssessments.map((a) => {
+                  const light = tierLabelToTrafficLight(a.infra_tier)
+                  const colour = light === 'green' ? '#22c55e' : light === 'amber' ? '#f59e0b' : '#ef4444'
+                  return (
+                    <Link
+                      key={a.id}
+                      href={`/admin/members/${a.member_id}`}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1fr auto',
+                        gap: '0.5rem',
+                        alignItems: 'center',
+                        padding: '0.4rem 0',
+                        borderBottom: '1px solid var(--border)',
+                        textDecoration: 'none',
+                        color: 'inherit'
+                      }}
+                      title="Open centre"
+                    >
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: colour }} />
+                      <div>
+                        <strong style={{ fontSize: '0.85rem' }}>{a.member_name}</strong>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+                          {fmtDate(a.assessed_on)} · {sourceLabel(a.source)}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--muted)', textAlign: 'right' }}>
+                        {a.infra_tier ? a.infra_tier.replace(/\s*—.*$/, '') : '—'}
+                        {a.infra_score != null && <div style={{ fontSize: '0.68rem' }}>{Math.round(a.infra_score)}%</div>}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+
             <div style={{ background: '#fff', borderRadius: 12, padding: '1.25rem', boxShadow: 'var(--shadow)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.85rem 0' }}>
                 <h3 style={{ fontSize: '0.95rem', margin: 0, color: 'var(--primary-dark)' }}>
-                  Recent assessments ({assessments.length})
+                  Recent assessments · legacy ({assessments.length})
                 </h3>
                 <a
                   href="/api/assessments/export"

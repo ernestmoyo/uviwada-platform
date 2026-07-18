@@ -54,6 +54,21 @@ export interface AdminAssessment {
   source: string
 }
 
+// A row from the NATIVE rubric store (rubric_assessments) — what the web rubric
+// form (/api/rubric-assessments) and the field app sync (/api/sync) both write.
+// Distinct from the legacy `assessments` table (AdminAssessment above).
+export interface AdminRubricAssessment {
+  id: string
+  member_id: string
+  member_name: string
+  assessed_on: string
+  assessment_type: string | null
+  infra_tier: string | null
+  infra_score: number | null
+  capacity_score: number | null
+  source: string
+}
+
 export interface AdminAnnouncement {
   id: string
   title_sw: string
@@ -233,6 +248,55 @@ export async function fetchAssessmentsForOrg(orgId: string, limit = 50): Promise
         rating: x.row.rating,
         score_total: x.row.score_total,
         score_max: x.row.score_max,
+        source: x.row.source
+      }))
+  } catch {
+    return []
+  }
+}
+
+// Recent rubric assessments (web form + field-app sync), newest first. This is
+// the list that shows a field assessment the moment it syncs — the legacy
+// fetchAssessmentsForOrg reads a different table and won't include these.
+export async function fetchRubricAssessmentsForOrg(orgId: string, limit = 30): Promise<AdminRubricAssessment[]> {
+  if (!isSupabaseConfigured()) return []
+  const supabase = getSupabaseAdmin()
+  if (!supabase) return []
+  try {
+    const { data } = await supabase
+      .from('rubric_assessments')
+      .select('id, member_id, assessed_on, assessment_type, infra_tier, infra_score, capacity_score, source, members(centre_name, org_id)')
+      .order('assessed_on', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(limit)
+    type RubricJoin = {
+      id: string
+      member_id: string
+      assessed_on: string
+      assessment_type: string | null
+      infra_tier: string | null
+      infra_score: number | null
+      capacity_score: number | null
+      source: string
+      members: { centre_name: string; org_id: string } | { centre_name: string; org_id: string }[] | null
+    }
+    const rows = (data ?? []) as unknown as RubricJoin[]
+    return rows
+      .map((r) => {
+        const memberRow = Array.isArray(r.members) ? r.members[0] : r.members
+        return memberRow ? { row: r, memberRow } : null
+      })
+      .filter((x): x is { row: RubricJoin; memberRow: { centre_name: string; org_id: string } } => !!x)
+      .filter((x) => isNationalTenant(orgId) || x.memberRow.org_id === orgId)
+      .map((x) => ({
+        id: x.row.id,
+        member_id: x.row.member_id,
+        member_name: x.memberRow.centre_name,
+        assessed_on: x.row.assessed_on,
+        assessment_type: x.row.assessment_type,
+        infra_tier: x.row.infra_tier,
+        infra_score: x.row.infra_score,
+        capacity_score: x.row.capacity_score,
         source: x.row.source
       }))
   } catch {
