@@ -1,8 +1,59 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { useI18n } from '@/lib/i18n'
+
+// Render the AI Markdown as clean formatted text (no raw **, #, --- markers):
+// headings (#/##/###), bold (**x**), bullets (- / *), rules, stray * stripped.
+function parseInline(s: string): ReactNode[] {
+  const nodes: ReactNode[] = []
+  const re = /\*\*([^*]+)\*\*/g
+  let last = 0
+  let m: RegExpExecArray | null
+  let k = 0
+  const strip = (x: string) => x.replace(/\*+/g, '')
+  while ((m = re.exec(s))) {
+    if (m.index > last) nodes.push(strip(s.slice(last, m.index)))
+    nodes.push(<strong key={`b${k++}`}>{m[1]}</strong>)
+    last = m.index + m[0].length
+  }
+  if (last < s.length) nodes.push(strip(s.slice(last)))
+  return nodes
+}
+
+function RichText({ text }: { text: string }) {
+  const lines = String(text ?? '').split('\n')
+  return (
+    <div style={{ marginTop: '0.75rem', fontSize: '0.92rem', lineHeight: 1.55 }}>
+      {lines.map((raw, i) => {
+        if (/^\s*(-\s*){3,}\s*$/.test(raw) || /^\s*-{3,}\s*$/.test(raw)) {
+          return <div key={i} style={{ height: 1, background: 'var(--border, #e5e7eb)', margin: '12px 0' }} />
+        }
+        if (raw.trim() === '') return <div key={i} style={{ height: 6 }} />
+        const hm = raw.match(/^\s*(#{1,6})\s+(.*)$/)
+        if (hm) {
+          const level = hm[1].length
+          return (
+            <div key={i} style={{ fontWeight: 800, fontSize: level <= 1 ? '1.05rem' : level === 2 ? '0.98rem' : '0.92rem', margin: '0.7rem 0 0.15rem' }}>
+              {parseInline(hm[2])}
+            </div>
+          )
+        }
+        const bm = raw.match(/^\s*[-*]\s+(.*)$/)
+        if (bm) {
+          return (
+            <div key={i} style={{ position: 'relative', margin: '0.15rem 0 0.15rem 1rem' }}>
+              <span style={{ position: 'absolute', left: '-0.9rem' }}>•</span>
+              {parseInline(bm[1])}
+            </div>
+          )
+        }
+        return <div key={i} style={{ margin: '0.15rem 0' }}>{parseInline(raw)}</div>
+      })}
+    </div>
+  )
+}
 
 // AI "areas this centre can improve", from the latest rubric scores.
 export function AiRecommendations({ memberId, centreName }: { memberId: string; centreName?: string }) {
@@ -83,7 +134,7 @@ export function AiRecommendations({ memberId, centreName }: { memberId: string; 
       </div>
       {error && <p style={{ color: 'var(--accent, #ef4444)', fontSize: '0.85rem' }}>{error}</p>}
       {msg && <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{msg}</p>}
-      {text && <div style={{ whiteSpace: 'pre-wrap', marginTop: '0.75rem', fontSize: '0.92rem', lineHeight: 1.5 }}>{text}</div>}
+      {text && <RichText text={text} />}
     </div>
   )
 }
