@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { MEMBERSHIP_PERIOD_LABEL, formatDate, formatTZS, latestPayment, load, type PaymentRecord } from '@/lib/membership'
+import { MEMBERSHIP_PERIOD_LABEL, formatDate, formatTZS } from '@/lib/membership'
 
 interface Props {
   memberId: string
@@ -13,14 +13,37 @@ interface Props {
   district: string
 }
 
-export function Receipt({ memberId, centreName, ownerName, ward, district }: Props) {
-  const [payment, setPayment] = useState<PaymentRecord | null>(null)
+// The signed-in member's latest payment, from the platform DB (not a per-device
+// store) — so the receipt reflects the real recorded payment and its verification.
+interface PaymentInfo {
+  amount: number
+  currency: string
+  payment_date: string
+  reference_number: string
+  method: string
+  status: 'pending' | 'verified' | 'rejected'
+}
+
+function plusOneYear(iso: string): string {
+  const d = new Date(iso)
+  d.setFullYear(d.getFullYear() + 1)
+  d.setDate(d.getDate() - 1)
+  return d.toISOString().slice(0, 10)
+}
+
+export function Receipt({ centreName, ownerName, ward, district }: Props) {
+  const [payment, setPayment] = useState<PaymentInfo | null>(null)
   const [ready, setReady] = useState(false)
 
-  useEffect(() => {
-    setPayment(latestPayment(load(memberId, centreName)))
+  const load = useCallback(async () => {
+    const pr = await fetch('/api/members/payments', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { payment: null }))
+      .catch(() => ({ payment: null }))
+    setPayment((pr.payment as PaymentInfo | null) ?? null)
     setReady(true)
-  }, [memberId, centreName])
+  }, [])
+
+  useEffect(() => { void load() }, [load])
 
   if (!ready) return null
 
@@ -28,7 +51,7 @@ export function Receipt({ memberId, centreName, ownerName, ward, district }: Pro
     return (
       <div className="doc-shell">
         <div className="doc-empty">
-          <p>No payment found on this device yet.</p>
+          <p>No payment recorded yet.</p>
           <Link className="btn btn-primary" href="/portal/membership">
             ← Back to Membership
           </Link>
@@ -36,6 +59,9 @@ export function Receipt({ memberId, centreName, ownerName, ward, district }: Pro
       </div>
     )
   }
+
+  const verified = payment.status === 'verified'
+  const periodTo = plusOneYear(payment.payment_date)
 
   return (
     <div className="doc-shell">
@@ -61,18 +87,20 @@ export function Receipt({ memberId, centreName, ownerName, ward, district }: Pro
           </div>
           <div className="receipt-title">
             <span>OFFICIAL RECEIPT</span>
-            <span className="receipt-paid">PAID</span>
+            <span className="receipt-paid" style={verified ? undefined : { background: '#fef3c7', color: '#92400e' }}>
+              {verified ? 'PAID' : 'AWAITING VERIFICATION'}
+            </span>
           </div>
         </div>
 
         <div className="receipt-meta">
           <div>
             <span className="rl">Receipt no.</span>
-            <strong>{payment.ref}</strong>
+            <strong>{payment.reference_number}</strong>
           </div>
           <div>
             <span className="rl">Date</span>
-            <strong>{formatDate(payment.date)}</strong>
+            <strong>{formatDate(payment.payment_date)}</strong>
           </div>
         </div>
 
@@ -95,7 +123,7 @@ export function Receipt({ memberId, centreName, ownerName, ward, district }: Pro
             <tr>
               <td>{MEMBERSHIP_PERIOD_LABEL} fee</td>
               <td>
-                {formatDate(payment.periodFrom)} → {formatDate(payment.periodTo)}
+                {formatDate(payment.payment_date)} → {formatDate(periodTo)}
               </td>
               <td className="ra">{formatTZS(payment.amount)}</td>
             </tr>
@@ -121,8 +149,9 @@ export function Receipt({ memberId, centreName, ownerName, ward, district }: Pro
         </div>
 
         <p className="receipt-note">
-          This receipt confirms payment of the annual UVIWATA membership fee. Membership is valid through {formatDate(payment.periodTo)}.
-          Demo document — figures recorded on this device for demonstration.
+          {verified
+            ? `This receipt confirms payment of the annual UVIWATA membership fee. Membership is valid through ${formatDate(periodTo)}.`
+            : 'This payment has been recorded and is awaiting verification by the UVIWATA secretariat.'}
         </p>
       </div>
     </div>
