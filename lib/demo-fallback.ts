@@ -179,7 +179,8 @@ function buildDemoTrainings(): AdminTraining[] {
       location: ['Kinondoni Hall', 'UVIWADA Office', 'Mbagala Centre', 'Kariakoo Hub', 'Ilala Hall', 'Online'][idx % 6],
       capacity: 25 + idx * 3,
       facilitator: ['UVIWADA Trainer', 'CiC Programme Officer', 'External Consultant'][idx % 3],
-      registered_count: idx % 3 === 0 ? 12 : idx % 3 === 1 ? 18 : 8
+      registered_count: idx % 3 === 0 ? 12 : idx % 3 === 1 ? 18 : 8,
+      registrations: []
     }
   })
 }

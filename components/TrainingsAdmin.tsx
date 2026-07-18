@@ -25,6 +25,7 @@ export function TrainingsAdmin({ trainings }: TrainingsAdminProps) {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -127,6 +128,8 @@ export function TrainingsAdmin({ trainings }: TrainingsAdminProps) {
           {trainings.map((t) => {
             const when = new Date(t.scheduled_at)
             const upcoming = when.getTime() > Date.now()
+            const open = openId === t.id
+            const roster = t.registrations ?? []
             return (
               <div
                 key={t.id}
@@ -135,28 +138,69 @@ export function TrainingsAdmin({ trainings }: TrainingsAdminProps) {
                   borderLeft: `3px solid ${upcoming ? 'var(--primary)' : 'var(--muted)'}`,
                   padding: '1rem 1.1rem',
                   borderRadius: 6,
-                  boxShadow: 'var(--shadow)',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto',
-                  gap: '1rem',
-                  alignItems: 'center'
+                  boxShadow: 'var(--shadow)'
                 }}
               >
-                <div>
-                  <strong>{t.title_en}</strong>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
-                    {when.toLocaleString('en-GB')} · {t.location} · {t.category}
-                    {t.facilitator ? ` · ${t.facilitator}` : ''}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', alignItems: 'center' }}>
+                  <div>
+                    <strong>{t.title_en}</strong>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
+                      {when.toLocaleString('en-GB')} · {t.location} · {t.category}
+                      {t.facilitator ? ` · ${t.facilitator}` : ''}
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : t.id)}
+                    aria-expanded={open}
+                    title={lang === 'sw' ? 'Ona vituo vilivyojisajili' : 'View enrolled centres'}
+                    style={{ textAlign: 'right', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                  >
+                    <div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>
+                      {t.registered_count} / {t.capacity}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {lang === 'sw' ? 'waliojisajili' : 'enrolled'} {open ? '▲' : '▾'}
+                    </div>
+                  </button>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>
-                    {t.registered_count} / {t.capacity}
+
+                {open && (
+                  <div style={{ marginTop: '0.85rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                    {roster.length === 0 ? (
+                      <p style={{ fontSize: '0.82rem', color: 'var(--muted)', fontStyle: 'italic', margin: 0 }}>
+                        {lang === 'sw' ? 'Hakuna kituo kilichojisajili bado.' : 'No centres enrolled yet.'}
+                      </p>
+                    ) : (
+                      <div style={{ display: 'grid', gap: '0.35rem' }}>
+                        {roster.map((r) => (
+                          <div
+                            key={r.member_id + r.registered_at}
+                            style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '0.6rem', alignItems: 'center', fontSize: '0.83rem', padding: '0.15rem 0', borderBottom: '1px solid var(--border)' }}
+                          >
+                            <a href={`/admin/members/${r.member_id}`} style={{ color: 'var(--primary-dark)', fontWeight: 600, textDecoration: 'none' }}>
+                              {r.member_name}
+                            </a>
+                            <span
+                              style={{
+                                fontSize: '0.68rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03em',
+                                color: r.status === 'attended' ? '#15803d' : r.status === 'absent' ? '#b91c1c' : 'var(--muted)'
+                              }}
+                            >
+                              {r.status}
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+                              {r.registered_at ? new Date(r.registered_at).toLocaleDateString('en-GB') : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    registered
-                  </div>
-                </div>
+                )}
               </div>
             )
           })}

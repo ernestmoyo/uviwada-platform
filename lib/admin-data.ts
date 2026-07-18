@@ -31,6 +31,13 @@ export interface AdminMember {
   joined_at: string
 }
 
+export interface TrainingEnrolment {
+  member_id: string
+  member_name: string
+  status: string
+  registered_at: string | null
+}
+
 export interface AdminTraining {
   id: string
   title_sw: string
@@ -41,6 +48,8 @@ export interface AdminTraining {
   capacity: number
   facilitator: string | null
   registered_count: number
+  // The DCCs enrolled in this training (empty in the no-Supabase demo).
+  registrations: TrainingEnrolment[]
 }
 
 export interface AdminAssessment {
@@ -197,14 +206,33 @@ export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining
     const ids = trs.map((t) => t.id)
     const { data: regs } = await supabase
       .from('training_registrations')
-      .select('training_id')
+      .select('training_id, member_id, status, registered_at, members(centre_name)')
       .in('training_id', ids)
-    const counts = new Map<string, number>()
-    ;((regs ?? []) as Array<{ training_id: string }>).forEach((r) => {
-      counts.set(r.training_id, (counts.get(r.training_id) ?? 0) + 1)
+      .order('registered_at', { ascending: true })
+    type RegJoin = {
+      training_id: string
+      member_id: string
+      status: string
+      registered_at: string | null
+      members: { centre_name: string } | { centre_name: string }[] | null
+    }
+    const roster = new Map<string, TrainingEnrolment[]>()
+    ;((regs ?? []) as unknown as RegJoin[]).forEach((r) => {
+      const m = Array.isArray(r.members) ? r.members[0] : r.members
+      const list = roster.get(r.training_id) ?? []
+      list.push({
+        member_id: r.member_id,
+        member_name: m?.centre_name ?? 'Unknown centre',
+        status: r.status,
+        registered_at: r.registered_at
+      })
+      roster.set(r.training_id, list)
     })
 
-    return trs.map((t) => ({ ...t, registered_count: counts.get(t.id) ?? 0 }))
+    return trs.map((t) => {
+      const registrations = roster.get(t.id) ?? []
+      return { ...t, registered_count: registrations.length, registrations }
+    })
   } catch {
     return DEMO_TRAININGS
   }
