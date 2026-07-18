@@ -5,7 +5,7 @@ import {
   DEMO_TRAININGS,
   listDemoMembersForOrg
 } from './demo-fallback'
-import { isNationalTenant } from './tenant-presets'
+import { DEFAULT_TENANT_ID, isNationalTenant } from './tenant-presets'
 import type { LicenseStatus, QualityRating } from './types/database'
 
 // The national tenant aggregates every region, so its admin queries must span
@@ -129,6 +129,39 @@ export async function fetchMembersForOrg(orgId: string): Promise<AdminMember[]> 
     return rows.map((r) => ({ ...r, membership_status: statusById.get(r.id) ?? 'approved' }))
   } catch {
     return listDemoMembersForOrg(orgId)
+  }
+}
+
+/**
+ * Members an assessor may assess.
+ *
+ * Assessors can assess ANY registered centre (not just their home ward/org), so
+ * this mirrors the mobile field feed (/api/field/centres): every REAL member,
+ * across all orgs, with NO org filter. Crucially, when Supabase is configured we
+ * NEVER fall back to demo centres — their synthetic UUIDs are not present in
+ * `members`, so submitting one triggers rubric_assessments_member_id_fkey. If
+ * the live DB genuinely has no members we return an empty list so the UI can say
+ * "no centres to assess" instead of offering un-saveable demo rows.
+ *
+ * Demo centres are only returned when Supabase is absent (pure no-secrets demo,
+ * where saving is disabled anyway), keeping web and mobile in sync on real data.
+ */
+export async function fetchAssessableMembers(): Promise<AdminMember[]> {
+  if (!isSupabaseConfigured()) return listDemoMembersForOrg(DEFAULT_TENANT_ID)
+  const supabase = getSupabaseAdmin()
+  if (!supabase) return listDemoMembersForOrg(DEFAULT_TENANT_ID)
+  try {
+    const { data } = await supabase
+      .from('members')
+      .select(
+        'id, centre_name, region, ward, district, phone, email, children_count, caregiver_count, license_status, license_number, license_expiry, latest_quality, joined_at'
+      )
+      .order('centre_name')
+    const rows = (data ?? []) as Omit<MemberRow, 'membership_status'>[]
+    // Real DB, real UUIDs only — no demo fallback here.
+    return rows.map((r) => ({ ...r, membership_status: 'approved' as MembershipStatus }))
+  } catch {
+    return []
   }
 }
 

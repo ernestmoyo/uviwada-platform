@@ -41,6 +41,25 @@ export async function POST(request: Request) {
   const supabase = getSupabaseAdmin()
   if (!supabase) return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
 
+  // Verify the centre actually exists before scoring/inserting. This turns the
+  // raw "violates foreign key constraint rubric_assessments_member_id_fkey"
+  // Postgres error (which leaks to the assessor's screen) into a clear message,
+  // and guards against stale/demo centre ids that aren't real members.
+  const { data: member, error: mErr } = await supabase
+    .from('members')
+    .select('id')
+    .eq('id', payload.member_id)
+    .maybeSingle()
+  if (mErr) {
+    return NextResponse.json({ error: 'Could not verify centre', detail: mErr.message }, { status: 500 })
+  }
+  if (!member) {
+    return NextResponse.json(
+      { error: 'This centre is no longer registered on the platform. Please re-open the list and pick it again.' },
+      { status: 409 }
+    )
+  }
+
   // server-authoritative scoring
   const capLevels = CAPACITY_COMPETENCIES.map((c) => payload.capacity[c.key] ?? null)
   const infraLevels = INFRA_SUBDOMAINS.map((c) => payload.infra[c.key] ?? null)

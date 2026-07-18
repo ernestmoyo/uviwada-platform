@@ -4,9 +4,8 @@ import { RubricAssessmentForm } from '@/components/RubricAssessmentForm'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { PortalNav } from '@/components/PortalNav'
-import { fetchMembersForOrg } from '@/lib/admin-data'
+import { fetchAssessableMembers } from '@/lib/admin-data'
 import { getCurrentUser } from '@/lib/auth'
-import { getCurrentTenantId } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -16,10 +15,11 @@ export default async function AssessPage() {
   if (!user) redirect('/login')
   if (!['assessor', 'secretariat', 'admin'].includes(user.role)) redirect('/')
 
-  const tenantId = getCurrentTenantId()
-  const members = await fetchMembersForOrg(tenantId)
-  // Assessors can assess ANY registered centre, not only their home ward.
-  const assignedMembers = members
+  // Assessors can assess ANY registered centre, not only their home ward/org.
+  // fetchAssessableMembers returns every REAL member (no org filter, no demo
+  // fallback) so the web form stays in sync with the mobile field feed and only
+  // ever submits member_ids that exist in the DB.
+  const assignedMembers = await fetchAssessableMembers()
 
   return (
     <>
@@ -37,9 +37,18 @@ export default async function AssessPage() {
             <InstallPrompt compact />
           </div>
 
-          <RubricAssessmentForm
-            members={assignedMembers.map((m) => ({ id: m.id, centre_name: m.centre_name, ward: m.ward }))}
-          />
+          {assignedMembers.length === 0 ? (
+            <div style={{ background: '#fff', borderRadius: 12, padding: '1.5rem', boxShadow: 'var(--shadow)', textAlign: 'center' }}>
+              <p style={{ fontWeight: 700, marginBottom: '0.35rem' }}>No registered centres to assess yet</p>
+              <p style={{ color: 'var(--muted)', fontSize: '0.9rem', margin: 0 }}>
+                Centres appear here once they are registered on the platform. Please try again after the next sync.
+              </p>
+            </div>
+          ) : (
+            <RubricAssessmentForm
+              members={assignedMembers.map((m) => ({ id: m.id, centre_name: m.centre_name, ward: m.ward }))}
+            />
+          )}
         </div>
       </main>
       <OfflineBanner />
