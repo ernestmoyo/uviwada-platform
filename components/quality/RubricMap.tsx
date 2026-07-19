@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react'
 import type * as Leaflet from 'leaflet'
 
+import { addSatelliteBasemap } from '@/lib/map-tiles'
+
 export interface RubricMapPoint {
   name: string
   lat: number
@@ -26,10 +28,7 @@ export function RubricMap({ points }: { points: RubricMapPoint[] }) {
       const L = (await import('leaflet')).default
       if (cancelled || !containerRef.current) return
       const map = L.map(containerRef.current, { scrollWheelZoom: false, zoomControl: true }).setView([-6.82, 39.22], 11)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 18
-      }).addTo(map)
+      addSatelliteBasemap(L, map)
       mapRef.current = map
       renderPoints(L, map)
     })()

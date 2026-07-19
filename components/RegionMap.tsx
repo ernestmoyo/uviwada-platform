@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 
+import { addSatelliteBasemap } from '@/lib/map-tiles'
+
 // National coverage map: all 31 Tanzania regions, with regions that have live
 // assessment data highlighted and the rest shown as "coming soon". Mirrors the
 // proven WardMap Leaflet pattern (dynamic import, mount-once, cleanup).
@@ -29,10 +31,7 @@ export function RegionMap({ liveRegions, height = 440 }: RegionMapProps) {
       if (cancelled || !containerRef.current) return
 
       const map = L.map(containerRef.current, { scrollWheelZoom: false, zoomControl: true }).setView([-6.4, 35.0], 5)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 12
-      }).addTo(map)
+      addSatelliteBasemap(L, map)
 
       try {
         const res = await fetch('/tz_regions.geojson')

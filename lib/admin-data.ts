@@ -332,6 +332,29 @@ export async function fetchRubricAssessmentsForOrg(orgId: string, limit = 30): P
   }
 }
 
+// A single centre's most recent rubric assessment (web form or field-app sync),
+// so the member-detail page can surface "Latest quality assessment: <date> · <tier>".
+export type LatestRubricAssessment = Omit<AdminRubricAssessment, 'member_name'>
+
+export async function fetchLatestRubricAssessment(memberId: string): Promise<LatestRubricAssessment | null> {
+  if (!isSupabaseConfigured()) return null
+  const supabase = getSupabaseAdmin()
+  if (!supabase) return null
+  try {
+    const { data } = await supabase
+      .from('rubric_assessments')
+      .select('id, member_id, assessed_on, assessment_type, infra_tier, infra_score, capacity_score, source')
+      .eq('member_id', memberId)
+      .order('assessed_on', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    return (data as LatestRubricAssessment | null) ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function fetchAnnouncementsForOrg(orgId: string): Promise<AdminAnnouncement[]> {
   if (!isSupabaseConfigured()) return DEMO_ANNOUNCEMENTS
   const supabase = getSupabaseAdmin()

@@ -9,6 +9,7 @@ import { MembershipReview } from '@/components/journey2/MembershipReview'
 import { PaymentForm } from '@/components/journey2/PaymentForm'
 import { MembershipBadge, ProfileBadge } from '@/components/journey2/StatusBadges'
 import { getCurrentUser } from '@/lib/auth'
+import { fetchLatestRubricAssessment } from '@/lib/admin-data'
 import {
   fetchMemberDetail,
   fetchMembershipLogs,
@@ -31,9 +32,10 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
   const member = await fetchMemberDetail(params.id)
   if (!member) notFound()
 
-  const [logs, payments] = await Promise.all([
+  const [logs, payments, latestAssessment] = await Promise.all([
     fetchMembershipLogs(member.id),
-    fetchMemberPayments(member.id)
+    fetchMemberPayments(member.id),
+    fetchLatestRubricAssessment(member.id)
   ])
 
   const today = new Date().toISOString().slice(0, 10)
@@ -91,6 +93,23 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
             </div>
 
             <MembershipReview memberId={member.id} status={member.membership_status} readOnly={!canModerate} />
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: 12, padding: '1rem 1.25rem', boxShadow: 'var(--shadow)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)' }}>Latest quality assessment</div>
+              {latestAssessment ? (
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>
+                  {fmtDate(latestAssessment.assessed_on)}
+                  {latestAssessment.infra_tier ? ` · ${latestAssessment.infra_tier}` : ''}
+                  {latestAssessment.infra_score != null ? ` · ${Math.round(latestAssessment.infra_score)}%` : ''}
+                  <span style={{ fontWeight: 400, color: 'var(--muted)' }}> · {latestAssessment.source === 'apk_synced' ? 'Field app' : 'Web'}</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.9rem', color: 'var(--muted)', fontStyle: 'italic', marginTop: '0.2rem' }}>No assessment yet.</div>
+              )}
+            </div>
+            {latestAssessment && <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{latestAssessment.assessment_type ?? ''}</span>}
           </div>
 
           <AiRecommendations memberId={member.id} centreName={member.centre_name} />

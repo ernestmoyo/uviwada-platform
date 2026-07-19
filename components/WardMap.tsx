@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 
+import { addSatelliteBasemap } from '@/lib/map-tiles'
+
 import { useI18n } from '@/lib/i18n'
 import { DISTRICT_COLOURS, QUALITY_COLOURS } from '@/lib/seed-data'
 import type { PublicCentre } from '@/lib/data'
@@ -50,10 +52,7 @@ export function WardMap({ centres }: WardMapProps) {
         zoomControl: true
       }).setView([-6.82, 39.27], 12)
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 18
-      }).addTo(map)
+      addSatelliteBasemap(L, map)
 
       try {
         const res = await fetch('/dar_wards.geojson')

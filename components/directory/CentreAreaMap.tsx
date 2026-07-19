@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 
+import { addSatelliteBasemap } from '@/lib/map-tiles'
+
 // Shows an APPROXIMATE area (a soft circle, ~500 m), never an exact pin — to
 // honour the consent rule that exact coordinates are not public by default
 // (V2 §669). Used on public centre profile pages.
@@ -22,10 +24,7 @@ export function CentreAreaMap({ lat, lng, label }: Props) {
       const L = (await import('leaflet')).default
       if (cancelled || !containerRef.current) return
       const map = L.map(containerRef.current, { scrollWheelZoom: false, zoomControl: true }).setView([lat, lng], 14)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 18
-      }).addTo(map)
+      addSatelliteBasemap(L, map)
       L.circle([lat, lng], {
         radius: 500,
         color: '#1A5FAA',
