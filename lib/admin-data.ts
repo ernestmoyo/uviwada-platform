@@ -47,9 +47,25 @@ export interface AdminTraining {
   location: string
   capacity: number
   facilitator: string | null
+  // Minimum enrolments before the facilitator confirms the training runs.
+  min_participants: number
+  // 'published' (open for registration) | 'confirmed' (going ahead) | 'cancelled'.
+  status: string
   registered_count: number
   // The DCCs enrolled in this training (empty in the no-Supabase demo).
   registrations: TrainingEnrolment[]
+}
+
+// A DCC-submitted request for a future training topic (secretariat reviews these).
+export interface AdminTrainingRequest {
+  id: string
+  member_id: string
+  member_name: string
+  category: string | null
+  topic: string | null
+  note: string | null
+  status: string
+  created_at: string | null
 }
 
 export interface AdminAssessment {
@@ -196,7 +212,7 @@ export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining
   try {
     let trainingsQ = supabase
       .from('trainings')
-      .select('id, title_sw, title_en, category, scheduled_at, location, capacity, facilitator')
+      .select('id, title_sw, title_en, category, scheduled_at, location, capacity, facilitator, min_participants, status')
     if (!isNationalTenant(orgId)) trainingsQ = trainingsQ.eq('org_id', orgId)
     const { data: trainings } = await trainingsQ.order('scheduled_at', { ascending: false })
 
@@ -235,6 +251,50 @@ export async function fetchTrainingsForOrg(orgId: string): Promise<AdminTraining
     })
   } catch {
     return DEMO_TRAININGS
+  }
+}
+
+// DCC-submitted training requests, newest first (secretariat reviews these).
+export async function fetchTrainingRequestsForOrg(orgId: string, limit = 30): Promise<AdminTrainingRequest[]> {
+  if (!isSupabaseConfigured()) return []
+  const supabase = getSupabaseAdmin()
+  if (!supabase) return []
+  try {
+    const { data } = await supabase
+      .from('training_requests')
+      .select('id, member_id, category, topic, note, status, created_at, org_id, members(centre_name, org_id)')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    type ReqJoin = {
+      id: string
+      member_id: string
+      category: string | null
+      topic: string | null
+      note: string | null
+      status: string
+      created_at: string | null
+      org_id: string | null
+      members: { centre_name: string; org_id: string } | { centre_name: string; org_id: string }[] | null
+    }
+    const rows = (data ?? []) as unknown as ReqJoin[]
+    return rows
+      .map((r) => {
+        const m = Array.isArray(r.members) ? r.members[0] : r.members
+        return { r, orgId: r.org_id ?? m?.org_id ?? null, name: m?.centre_name ?? 'Unknown centre' }
+      })
+      .filter((x) => isNationalTenant(orgId) || x.orgId === orgId)
+      .map((x) => ({
+        id: x.r.id,
+        member_id: x.r.member_id,
+        member_name: x.name,
+        category: x.r.category,
+        topic: x.r.topic,
+        note: x.r.note,
+        status: x.r.status,
+        created_at: x.r.created_at
+      }))
+  } catch {
+    return []
   }
 }
 

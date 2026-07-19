@@ -68,6 +68,16 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
           >
             <div>
               <strong>{lang === 'sw' ? t.title_sw : t.title_en}</strong>
+              {t.isNew && (
+                <span style={{ marginLeft: '0.4rem', fontSize: '0.66rem', fontWeight: 700, background: '#ef4444', color: '#fff', borderRadius: 99, padding: '0.05rem 0.4rem', verticalAlign: 'middle' }}>
+                  {lang === 'sw' ? 'MPYA' : 'NEW'}
+                </span>
+              )}
+              {t.status === 'confirmed' && (
+                <span style={{ marginLeft: '0.4rem', fontSize: '0.66rem', fontWeight: 700, background: '#dcfce7', color: '#166534', borderRadius: 99, padding: '0.05rem 0.4rem', verticalAlign: 'middle' }}>
+                  {lang === 'sw' ? 'IMETHIBITISHWA' : 'CONFIRMED'}
+                </span>
+              )}
               <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
                 {when.toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', {
                   weekday: 'short',

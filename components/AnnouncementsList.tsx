@@ -21,13 +21,18 @@ export function AnnouncementsList({ items }: { items: PortalAnnouncement[] }) {
             key={a.id}
             style={{
               background: '#fff',
-              borderLeft: '3px solid var(--primary)',
+              borderLeft: `3px solid ${a.isNew ? '#ef4444' : 'var(--primary)'}`,
               padding: '0.85rem 1rem',
               borderRadius: 6,
               boxShadow: 'var(--shadow)'
             }}
           >
             <strong>{lang === 'sw' ? a.title_sw : a.title_en}</strong>
+            {a.isNew && (
+              <span style={{ marginLeft: '0.4rem', fontSize: '0.66rem', fontWeight: 700, background: '#ef4444', color: '#fff', borderRadius: 99, padding: '0.05rem 0.4rem', verticalAlign: 'middle' }}>
+                {lang === 'sw' ? 'MPYA' : 'NEW'}
+              </span>
+            )}
             <div style={{ fontSize: '0.85rem', marginTop: '0.3rem', color: 'var(--text)' }}>
               {lang === 'sw' ? a.body_sw : a.body_en}
             </div>

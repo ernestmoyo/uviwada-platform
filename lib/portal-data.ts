@@ -31,7 +31,9 @@ export interface UpcomingTraining {
   location: string
   capacity: number
   facilitator: string | null
+  status: string
   registered: boolean
+  isNew: boolean
 }
 
 export interface PortalAnnouncement {
@@ -41,6 +43,7 @@ export interface PortalAnnouncement {
   body_sw: string
   body_en: string
   published_at: string
+  isNew: boolean
 }
 
 export interface RecommendedTraining {
@@ -57,6 +60,8 @@ export interface PortalSnapshot {
   announcements: PortalAnnouncement[]
   recommended: RecommendedTraining[]
   weakDimensions: QualityDimension[]
+  // Count of trainings + announcements posted since the DCC last opened the portal.
+  newCount: number
 }
 
 const DIMENSION_LABELS: Record<QualityDimension, { sw: string; en: string }> = {
@@ -76,7 +81,7 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
   const { data: centreRow } = await supabase
     .from('members')
     .select(
-      'id, centre_name, ward, district, address, phone, email, children_count, caregiver_count, age_band_0_2, age_band_3_4, age_band_5_6, license_status, license_number, license_expiry, joined_at, latest_quality, org_id'
+      'id, centre_name, ward, district, address, phone, email, children_count, caregiver_count, age_band_0_2, age_band_3_4, age_band_5_6, license_status, license_number, license_expiry, joined_at, latest_quality, org_id, portal_last_seen_at'
     )
     .eq('id', memberId)
     .single()
@@ -84,17 +89,23 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
   if (!centreRow) return buildDemoPortalSnapshot(memberId)
   const centre = (centreRow as MyCentre & { org_id?: string }) ?? null
   const orgId = (centreRow as { org_id?: string } | null)?.org_id
+  // Everything posted after this instant is flagged "new" for this visit. We read
+  // it BEFORE stamping the current visit below.
+  const lastSeen = (centreRow as { portal_last_seen_at?: string | null }).portal_last_seen_at ?? null
+  const isNewer = (iso: string | null | undefined) => !!iso && (!lastSeen || iso > lastSeen)
 
   let upcoming: UpcomingTraining[] = []
   let announcements: PortalAnnouncement[] = []
   let recommended: RecommendedTraining[] = []
   let weakDimensions: QualityDimension[] = []
+  let newCount = 0
 
   if (orgId) {
     const { data: trainingRows } = await supabase
       .from('trainings')
-      .select('id, title_sw, title_en, category, scheduled_at, location, capacity, facilitator')
+      .select('id, title_sw, title_en, category, scheduled_at, location, capacity, facilitator, status, created_at')
       .eq('org_id', orgId)
+      .neq('status', 'cancelled')
       .gte('scheduled_at', new Date().toISOString())
       .order('scheduled_at', { ascending: true })
       .limit(6)
@@ -105,9 +116,18 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
       .eq('member_id', memberId)
     const registeredSet = new Set(((regRows ?? []) as Array<{ training_id: string }>).map((r) => r.training_id))
 
-    upcoming = ((trainingRows ?? []) as Array<Omit<UpcomingTraining, 'registered'>>).map((t) => ({
-      ...t,
-      registered: registeredSet.has(t.id)
+    upcoming = ((trainingRows ?? []) as Array<Record<string, unknown>>).map((t) => ({
+      id: t.id as string,
+      title_sw: t.title_sw as string,
+      title_en: t.title_en as string,
+      category: t.category as string,
+      scheduled_at: t.scheduled_at as string,
+      location: t.location as string,
+      capacity: (t.capacity as number) ?? 0,
+      facilitator: (t.facilitator as string | null) ?? null,
+      status: (t.status as string) ?? 'published',
+      registered: registeredSet.has(t.id as string),
+      isNew: isNewer(t.created_at as string | null)
     }))
 
     const { data: annRows } = await supabase
@@ -116,7 +136,14 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
       .eq('org_id', orgId)
       .order('published_at', { ascending: false })
       .limit(5)
-    announcements = (annRows ?? []) as PortalAnnouncement[]
+    announcements = ((annRows ?? []) as Array<Omit<PortalAnnouncement, 'isNew'>>).map((a) => ({
+      ...a,
+      isNew: isNewer(a.published_at)
+    }))
+
+    newCount = upcoming.filter((t) => t.isNew).length + announcements.filter((a) => a.isNew).length
+    // Stamp this visit so the same items aren't "new" next time.
+    await supabase.from('members').update({ portal_last_seen_at: new Date().toISOString() }).eq('id', memberId)
 
     // Recommended trainings: any dimensions where the centre's most recent
     // assessment scored below the dimension average. Phase-2 will replace this
@@ -165,7 +192,7 @@ export async function fetchPortalSnapshot(memberId: string): Promise<PortalSnaps
     }
   }
 
-  return { centre, upcoming, announcements, recommended, weakDimensions }
+  return { centre, upcoming, announcements, recommended, weakDimensions, newCount }
 }
 
 export function dimensionLabel(dim: QualityDimension): { sw: string; en: string } {

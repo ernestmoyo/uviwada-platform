@@ -7,6 +7,7 @@ import { EditableCentreDetails } from '@/components/EditableCentreDetails'
 import { LicenseCard } from '@/components/LicenseCard'
 import { MembershipStatusPill } from '@/components/membership/MembershipStatusPill'
 import { PortalNav } from '@/components/PortalNav'
+import { RequestTraining } from '@/components/RequestTraining'
 import { TrafficLightCard } from '@/components/TrafficLightCard'
 import { TrainingsList } from '@/components/TrainingsList'
 import { getCurrentUser } from '@/lib/auth'
@@ -134,8 +135,14 @@ export default async function PortalPage() {
               <section style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.15rem', marginBottom: '0.75rem' }}>
                   Upcoming Trainings · Mafunzo Yajayo
+                  {snapshot.newCount > 0 && (
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', fontWeight: 700, background: '#ef4444', color: '#fff', borderRadius: 99, padding: '0.1rem 0.5rem', verticalAlign: 'middle' }}>
+                      {snapshot.newCount} new
+                    </span>
+                  )}
                 </h2>
                 <TrainingsList trainings={snapshot.upcoming} />
+                <RequestTraining />
               </section>
 
               <section style={{ marginBottom: '2rem' }}>

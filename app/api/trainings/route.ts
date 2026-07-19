@@ -12,6 +12,7 @@ const createSchema = z.object({
   scheduled_at: z.string().min(8),
   location: z.string().min(2),
   capacity: z.coerce.number().int().min(1).max(500),
+  min_participants: z.coerce.number().int().min(0).max(500).optional(),
   facilitator: z.string().optional().or(z.literal(''))
 })
 
@@ -42,6 +43,8 @@ export async function POST(request: Request) {
       scheduled_at: new Date(payload.scheduled_at).toISOString(),
       location: payload.location,
       capacity: payload.capacity,
+      min_participants: payload.min_participants ?? 0,
+      status: 'published',
       facilitator: payload.facilitator || null
     })
     .select('id')

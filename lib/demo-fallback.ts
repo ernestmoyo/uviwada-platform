@@ -179,6 +179,8 @@ function buildDemoTrainings(): AdminTraining[] {
       location: ['Kinondoni Hall', 'UVIWADA Office', 'Mbagala Centre', 'Kariakoo Hub', 'Ilala Hall', 'Online'][idx % 6],
       capacity: 25 + idx * 3,
       facilitator: ['UVIWADA Trainer', 'CiC Programme Officer', 'External Consultant'][idx % 3],
+      min_participants: 10,
+      status: 'published',
       registered_count: idx % 3 === 0 ? 12 : idx % 3 === 1 ? 18 : 8,
       registrations: []
     }
@@ -199,7 +201,9 @@ export function getDemoUpcomingTrainings(): UpcomingTraining[] {
       location: t.location,
       capacity: t.capacity,
       facilitator: t.facilitator,
-      registered: false
+      status: 'published',
+      registered: false,
+      isNew: false
     }))
     .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
 }
@@ -239,7 +243,8 @@ export function getDemoPortalAnnouncements(): PortalAnnouncement[] {
     title_en: a.title_en,
     body_sw: a.body_sw,
     body_en: a.body_en,
-    published_at: a.published_at
+    published_at: a.published_at,
+    isNew: false
   }))
 }
 
@@ -267,7 +272,7 @@ export function getDemoRecommendedTrainings(quality: QualityRating | null): Reco
 export function buildDemoPortalSnapshot(memberId: string): PortalSnapshot {
   const centre = getDemoCentreById(memberId)
   if (!centre) {
-    return { centre: null, upcoming: [], announcements: [], recommended: [], weakDimensions: [] }
+    return { centre: null, upcoming: [], announcements: [], recommended: [], weakDimensions: [], newCount: 0 }
   }
   const { org_id: _ignoredOrg, owner_user_id: _ignoredOwner, ...publicCentre } = centre
   return {
@@ -275,7 +280,8 @@ export function buildDemoPortalSnapshot(memberId: string): PortalSnapshot {
     upcoming: getDemoUpcomingTrainings(),
     announcements: getDemoPortalAnnouncements(),
     recommended: getDemoRecommendedTrainings(centre.latest_quality),
-    weakDimensions: []
+    weakDimensions: [],
+    newCount: 0
   }
 }
 

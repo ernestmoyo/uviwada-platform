@@ -26,6 +26,31 @@ export function TrainingsAdmin({ trainings }: TrainingsAdminProps) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  async function changeStatus(id: string, status: 'confirmed' | 'cancelled' | 'published') {
+    if (busyId) return
+    setBusyId(id)
+    setError(null)
+    try {
+      const res = await fetch('/api/trainings/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ training_id: id, status })
+      })
+      if (!res.ok) {
+        const json = (await res.json()) as { error?: string; detail?: string }
+        setError(json.detail ?? json.error ?? 'Failed to update status')
+        setBusyId(null)
+        return
+      }
+      setBusyId(null)
+      router.refresh()
+    } catch {
+      setError('Network error')
+      setBusyId(null)
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -110,9 +135,15 @@ export function TrainingsAdmin({ trainings }: TrainingsAdminProps) {
               <input id="capacity" name="capacity" type="number" min="1" required defaultValue={30} />
             </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="facilitator">Facilitator (optional)</label>
-            <input id="facilitator" name="facilitator" placeholder="e.g. Dr. Esther Mwakasege" />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="min_participants">Minimum participants (go/no-go)</label>
+              <input id="min_participants" name="min_participants" type="number" min="0" defaultValue={10} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="facilitator">Facilitator (optional)</label>
+              <input id="facilitator" name="facilitator" placeholder="e.g. Dr. Esther Mwakasege" />
+            </div>
           </div>
           {error && <p style={{ color: 'var(--accent)', fontSize: '0.85rem' }}>{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={submitting} style={{ marginTop: '0.5rem' }}>
@@ -164,6 +195,59 @@ export function TrainingsAdmin({ trainings }: TrainingsAdminProps) {
                     </div>
                   </button>
                 </div>
+
+                {/* Go/no-go: minimum-participants gate + facilitator confirmation */}
+                {(() => {
+                  const min = t.min_participants ?? 0
+                  const met = t.registered_count >= min
+                  const status = t.status ?? 'published'
+                  const badge =
+                    status === 'confirmed'
+                      ? { bg: '#dcfce7', fg: '#166534', text: lang === 'sw' ? 'Imethibitishwa · inaendelea' : 'Confirmed · going ahead' }
+                      : status === 'cancelled'
+                        ? { bg: '#fee2e2', fg: '#991b1b', text: lang === 'sw' ? 'Imeghairiwa' : 'Cancelled' }
+                        : { bg: '#fef3c7', fg: '#92400e', text: lang === 'sw' ? 'Wazi kwa usajili' : 'Open for registration' }
+                  return (
+                    <div style={{ marginTop: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.55rem', borderRadius: 99, background: badge.bg, color: badge.fg }}>{badge.text}</span>
+                      <span style={{ fontSize: '0.76rem', color: met ? '#166534' : 'var(--muted)' }}>
+                        {lang === 'sw' ? 'Kima cha chini' : 'Minimum'} {min} · {t.registered_count} {lang === 'sw' ? 'wamejisajili' : 'enrolled'}{met ? ' ✓' : ''}
+                      </span>
+                      <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.4rem' }}>
+                        {status !== 'confirmed' && (
+                          <button
+                            type="button"
+                            onClick={() => changeStatus(t.id, 'confirmed')}
+                            disabled={busyId === t.id || !met}
+                            title={met ? '' : lang === 'sw' ? 'Kima cha chini bado hakijafikiwa' : 'Minimum not yet met'}
+                            style={{ padding: '0.25rem 0.7rem', borderRadius: 6, border: 'none', background: met ? '#16a34a' : '#cbd5e1', color: '#fff', fontSize: '0.76rem', fontWeight: 600, cursor: met ? 'pointer' : 'not-allowed' }}
+                          >
+                            {busyId === t.id ? '…' : lang === 'sw' ? 'Thibitisha & endelea' : 'Confirm & proceed'}
+                          </button>
+                        )}
+                        {status !== 'cancelled' ? (
+                          <button
+                            type="button"
+                            onClick={() => changeStatus(t.id, 'cancelled')}
+                            disabled={busyId === t.id}
+                            style={{ padding: '0.25rem 0.7rem', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', color: '#991b1b', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            {lang === 'sw' ? 'Ghairi' : 'Cancel'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => changeStatus(t.id, 'published')}
+                            disabled={busyId === t.id}
+                            style={{ padding: '0.25rem 0.7rem', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', color: 'var(--primary-dark)', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            {lang === 'sw' ? 'Fungua tena' : 'Reopen'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {open && (
                   <div style={{ marginTop: '0.85rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
