@@ -61,6 +61,29 @@ export function buildLessonDoc(p: LessonPlanStructured | null, raw: { title?: un
     })))
     children.push(heading(L.assess), body(plan.assessment))
     if (plan.notes) { children.push(heading(L.notes), body(plan.notes)) }
+    // Printable teaching aids: one line of large emoji + labels per aid, so the
+    // careworker can print the Word doc and cut the cards out.
+    if (plan.visual_aids && plan.visual_aids.length) {
+      children.push(heading(lang === 'en' ? 'Visual aids' : 'Vifaa vya kuona'))
+      plan.visual_aids.forEach((a) => {
+        children.push(new Paragraph({
+          spacing: { before: 160, after: 40 },
+          children: [new TextRun({ text: a.title, bold: true, size: 22, color: NAVY })]
+        }))
+        children.push(body(a.instruction))
+        children.push(new Paragraph({
+          spacing: { after: 120 },
+          children: [new TextRun({
+            text: a.items
+              .map((i) => (a.type === 'counting'
+                ? `${i.label}  ${i.emoji.repeat(Math.max(0, Math.min(10, parseInt(i.label, 10) || 0)))}`
+                : `${i.emoji}  ${i.label}${i.group ? ` (${i.group})` : ''}`))
+              .join('     '),
+            size: 36
+          })]
+        }))
+      })
+    }
   } else {
     String(raw.content || '').split('\n').forEach((line) => children.push(body(line)))
   }

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { useI18n } from '@/lib/i18n'
+import { VisualAids } from '@/components/curriculum/VisualAids'
+import type { VisualAid } from '@/lib/curriculum'
 
 interface Card {
   id: string
@@ -16,6 +18,7 @@ interface Plan {
   title: string; age_band: string; theme: string; duration_minutes?: number
   objectives: string[]; materials: string[]; introduction: string
   steps: PlanStep[]; assessment: string; notes?: string
+  visual_aids?: VisualAid[]
 }
 
 const AGE_BANDS = ['2-3', '3-4', '4-5']
@@ -183,7 +186,7 @@ export function CurriculumStudio() {
               )}
             </div>
           ) : (
-            <PlanView plan={plan.plan} id={plan.id} t={t} />
+            <PlanView plan={plan.plan} id={plan.id} t={t} lang={lang} />
           )}
         </div>
       </div>
@@ -232,7 +235,7 @@ const SECTIONS: Array<{ key: keyof Plan; sw: string; en: string; color: string; 
   { key: 'notes', sw: 'Maelezo', en: 'Notes', color: 'var(--muted)', icon: '📝' }
 ]
 
-function PlanView({ plan, id, t }: { plan: Plan; id: string; t: (sw: string, en: string) => string }) {
+function PlanView({ plan, id, t, lang }: { plan: Plan; id: string; t: (sw: string, en: string) => string; lang: 'sw' | 'en' }) {
   return (
     <div className="portal-form-card" style={{ padding: 0, overflow: 'hidden' }}>
       {/* Title band */}
@@ -286,6 +289,7 @@ function PlanView({ plan, id, t }: { plan: Plan; id: string; t: (sw: string, en:
           }
           return null
         })}
+        <VisualAids aids={plan.visual_aids} lang={lang} />
       </div>
     </div>
   )

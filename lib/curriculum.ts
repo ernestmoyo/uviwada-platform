@@ -71,7 +71,13 @@ export function lessonPlanSystem(lang: Lang): string {
     `Write the ENTIRE lesson plan in ${langName}.`,
     'Ground the plan in the provided curriculum cards — adapt and synthesise them; do not invent unrelated content and do not copy a card verbatim.',
     'The setting is a low-resource daycare for children aged 2–5 in Tanzania: assume simple, locally-available materials.',
-    'Be practical, warm, and concrete. Use plain language a careworker can follow step by step.'
+    'Be practical, warm, and concrete. Use plain language a careworker can follow step by step.',
+    'Also propose 1–3 visual_aids: printable cards the centre can cut out and hold up to the children.',
+    'Each aid must come from THIS lesson\'s content (the theme and the cards above) — never generic filler.',
+    'Every item needs a short label in the plan\'s language plus ONE widely-recognised emoji that pictures it;',
+    'prefer things a Tanzanian child would know. Give 4–6 items per aid and a one-line instruction telling the',
+    'careworker how to use it. For "counting", the label is the numeral ("3") and the emoji is the object to count.',
+    'For "sorting", put each item in one of exactly two groups using the group field.'
   ].join(' ')
 }
 
@@ -108,11 +114,55 @@ export const LESSON_PLAN_SCHEMA = {
       }
     },
     assessment: { type: 'string' },
-    notes: { type: 'string' }
+    notes: { type: 'string' },
+    // Printable teaching aids the platform draws as cards. The type list is
+    // closed so the model can only ask for aids we can actually render.
+    visual_aids: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['flashcards', 'counting', 'shapes', 'colours', 'storyboard', 'sorting'] },
+          title: { type: 'string' },
+          instruction: { type: 'string' },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                label: { type: 'string' },
+                emoji: { type: 'string' },
+                group: { type: 'string' }
+              },
+              required: ['label', 'emoji'],
+              additionalProperties: false
+            }
+          }
+        },
+        required: ['type', 'title', 'instruction', 'items'],
+        additionalProperties: false
+      }
+    }
   },
-  required: ['title', 'age_band', 'theme', 'objectives', 'materials', 'introduction', 'steps', 'assessment'],
+  required: ['title', 'age_band', 'theme', 'objectives', 'materials', 'introduction', 'steps', 'assessment', 'visual_aids'],
   additionalProperties: false
 } as const
+
+export type VisualAidType = 'flashcards' | 'counting' | 'shapes' | 'colours' | 'storyboard' | 'sorting'
+
+export interface VisualAidItem {
+  label: string
+  emoji: string
+  /** sorting aids only — which column the item belongs in */
+  group?: string
+}
+
+export interface VisualAid {
+  type: VisualAidType
+  title: string
+  instruction: string
+  items: VisualAidItem[]
+}
 
 export interface LessonPlanStructured {
   title: string
@@ -125,6 +175,8 @@ export interface LessonPlanStructured {
   steps: Array<{ title: string; detail: string }>
   assessment: string
   notes?: string
+  /** optional: plans generated before visual aids shipped have none */
+  visual_aids?: VisualAid[]
 }
 
 export function lessonPlanToMarkdown(p: LessonPlanStructured, lang: Lang): string {
@@ -140,6 +192,13 @@ export function lessonPlanToMarkdown(p: LessonPlanStructured, lang: Lang): strin
   p.steps.forEach((s, i) => lines.push(`${i + 1}. **${s.title}** — ${s.detail}`))
   lines.push('', `## ${L.assess}`, p.assessment)
   if (p.notes) lines.push('', `## ${L.notes}`, p.notes)
+  if (p.visual_aids && p.visual_aids.length) {
+    lines.push('', `## ${lang === 'en' ? 'Visual aids' : 'Vifaa vya kuona'}`)
+    p.visual_aids.forEach((a) => {
+      lines.push('', `**${a.title}**`, a.instruction)
+      lines.push(a.items.map((i) => `${i.emoji} ${i.label}${i.group ? ` (${i.group})` : ''}`).join('  ·  '))
+    })
+  }
   return lines.join('\n')
 }
 
