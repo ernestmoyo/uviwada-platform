@@ -9,12 +9,13 @@ import { WARDS_BY_DISTRICT } from '@/lib/seed-data'
 // geolocation. Better than NULL (which excludes the centre from the public
 // map) and accurate enough at ward-level for the GIS overview.
 const DISTRICT_FALLBACK_GPS: Record<string, { lat: number; lng: number }> = {
-  Kinondoni: { lat: -6.77, lng: 39.26 },
-  Ilala: { lat: -6.82, lng: 39.27 },
-  Temeke: { lat: -6.87, lng: 39.29 },
-  Kigamboni: { lat: -6.85, lng: 39.32 },
-  Ubungo: { lat: -6.78, lng: 39.21 }
+  'Kinondoni MC': { lat: -6.77, lng: 39.26 },
+  'Dar es Salaam CC': { lat: -6.82, lng: 39.27 },
+  'Temeke MC': { lat: -6.87, lng: 39.29 },
+  'Kigamboni MC': { lat: -6.85, lng: 39.32 },
+  'Ubungo MC': { lat: -6.78, lng: 39.21 }
 }
+const DEFAULT_DISTRICT = 'Kinondoni MC'
 
 interface FieldError {
   field: string
@@ -24,7 +25,7 @@ interface FieldError {
 
 export function RegisterForm() {
   const { lang } = useI18n()
-  const [district, setDistrict] = useState<string>('Kinondoni')
+  const [district, setDistrict] = useState<string>(DEFAULT_DISTRICT)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([])
@@ -59,7 +60,7 @@ export function RegisterForm() {
     setFieldErrors([])
     const fd = new FormData(e.currentTarget)
     const payload = Object.fromEntries(fd.entries()) as Record<string, string>
-    const fallback = DISTRICT_FALLBACK_GPS[district] ?? DISTRICT_FALLBACK_GPS.Kinondoni
+    const fallback = DISTRICT_FALLBACK_GPS[district] ?? DISTRICT_FALLBACK_GPS[DEFAULT_DISTRICT]
     payload.lat = String(gps?.lat ?? fallback.lat)
     payload.lng = String(gps?.lng ?? fallback.lng)
     setPendingPayload(payload)

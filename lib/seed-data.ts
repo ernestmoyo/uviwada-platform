@@ -62,12 +62,15 @@ export const DISTRICT_COLOURS: Record<string, string> = {
 // Manzese centres sit in Ubungo, not Ilala) and extended with the other wards
 // each council covers.
 // KEEP IN SYNC with mobile/webapp/screens-capture.js WARDS_BY_DISTRICT.
+// District keys use the council naming the assessed dataset already uses
+// (`Kinondoni MC`, `Dar es Salaam CC`, …), so a registered centre's district
+// matches the council recorded on assessments — one convention platform-wide.
 export const WARDS_BY_DISTRICT: Record<string, string[]> = {
-  Kinondoni: ['Hananasif', 'Kigogo', 'Kinondoni', 'Magomeni', 'Mikocheni', 'Mwananyamala', 'Ndugumbi', 'Tandale'],
-  Ilala: ['Buguruni', 'Ilala', 'Kariakoo', 'Kiwalani', 'Tabata', 'Vingunguti'],
-  Ubungo: ['Kibamba', 'Kimara', 'Makurumla', 'Manzese', 'Sinza', 'Ubungo'],
-  Temeke: ['Chang\'ombe', 'Kilakala', 'Kurasini', 'Mbagala', 'Temeke'],
-  Kigamboni: ['Kibada', 'Kigamboni', 'Tungi', 'Vijibweni']
+  'Kinondoni MC': ['Hananasif', 'Kigogo', 'Kinondoni', 'Magomeni', 'Mikocheni', 'Mwananyamala', 'Ndugumbi', 'Tandale'],
+  'Dar es Salaam CC': ['Buguruni', 'Ilala', 'Kariakoo', 'Kiwalani', 'Tabata', 'Vingunguti'],
+  'Ubungo MC': ['Kibamba', 'Kimara', 'Makurumla', 'Manzese', 'Sinza', 'Ubungo'],
+  'Temeke MC': ['Chang\'ombe', 'Kilakala', 'Kurasini', 'Mbagala', 'Temeke'],
+  'Kigamboni MC': ['Kibada', 'Kigamboni', 'Tungi', 'Vijibweni']
 }
 
 export const SIX_DIMENSIONS = [
